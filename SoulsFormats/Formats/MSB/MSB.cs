@@ -64,6 +64,8 @@ namespace SoulsFormats
         {
             if (index == -1)
                 return null;
+            else if (index >= list.Count || index < 0)
+                return "OUT OF BOUNDS";
             else
                 return list[index].Name;
         }
