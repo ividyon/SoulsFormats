@@ -173,7 +173,7 @@ namespace SoulsFormats
                         return ConnectCollisions.EchoAdd(new Part.ConnectCollision(br));
 
                     default:
-                        return Unk1s.EchoAdd(new Part.UnkP1(br));
+                        return Unk1s.EchoAdd(new Part.UnkP1(br, type));
 
                     //default:
                     //    throw new NotImplementedException($"Unimplemented part type: {type}");
@@ -345,6 +345,8 @@ namespace SoulsFormats
             /// </summary>
             public int UnkE40 { get; set; }
 
+            public List<object> otherUnks = new List<object>();
+
             private protected Part(string name)
             {
                 Name = name;
@@ -374,19 +376,20 @@ namespace SoulsFormats
             {
                 long start = br.Position;
                 long nameOffset = br.ReadInt64();
-                br.ReadInt32();
+                otherUnks.Add(br.ReadInt32());
                 //br.AssertUInt32((uint)Type);
-                br.ReadInt32(); // ID
+                otherUnks.Add(br.ReadInt32()); // ID
                 ModelIndex = br.ReadInt32();
-                br.ReadInt32();
+                int modelIndex2 = br.ReadInt32();
+                if (modelIndex2 != ModelIndex) ModelIndex = modelIndex2;
                 //br.AssertInt32(0);
                 long sibOffset = br.ReadInt64();
                 Position = br.ReadVector3();
                 Rotation = br.ReadVector3();
                 Scale = br.ReadVector3();
-                br.ReadInt32();
+                otherUnks.Add(br.ReadInt32());
                 //br.AssertInt32(-1);
-                br.ReadInt32();
+                otherUnks.Add(br.ReadInt32());
                 //br.AssertInt32(-1);
                 br.AssertInt32(0);
                 long unkOffset1 = br.ReadInt64();
@@ -396,11 +399,11 @@ namespace SoulsFormats
                 long gparamOffset = br.ReadInt64();
                 long unkOffset6 = br.ReadInt64();
                 long unkOffset7 = br.ReadInt64();
-                br.ReadInt64();
+                otherUnks.Add(br.ReadInt64());
                 //br.AssertInt64(0);
-                br.ReadInt64();
+                otherUnks.Add(br.ReadInt64());
                 //br.AssertInt64(0);
-                br.ReadInt64();
+                otherUnks.Add(br.ReadInt64());
                 //br.AssertInt64(0);
 
                 if (nameOffset == 0)
@@ -492,7 +495,7 @@ namespace SoulsFormats
                 EntityGroupIDs = br.ReadInt32s(8);
                 UnkE3C = br.ReadInt32();
                 UnkE40 = br.ReadInt32();
-                for (int i = 0; i < 0x10; i++) br.ReadByte();
+                for (int i = 0; i < 0x10; i++) otherUnks.Add(br.ReadByte());
                 //br.AssertPattern(0x10, 0x00);
             }
 
@@ -991,6 +994,11 @@ namespace SoulsFormats
                     bw.WriteInt32(-1);
                     bw.WriteInt32(0);
                 }
+
+                public override string ToString()
+                {
+                    return $"{Unk00} {Unk04} {GrassTypeParamID} {Unk0C} {Unk10} {Unk14}";
+                }
             }
 
             /// <summary>
@@ -1026,6 +1034,9 @@ namespace SoulsFormats
                 /// </summary>
                 public UnkStruct7? Unk7 { get; set; }
 
+                public int T00 { get; set; }
+                public int T04 { get; set; }
+
                 /// <summary>
                 /// Creates a MapPiece with default values.
                 /// </summary>
@@ -1050,9 +1061,9 @@ namespace SoulsFormats
 
                 private protected override void ReadTypeData(BinaryReaderEx br)
                 {
-                    br.ReadInt32();
+                    T00 = br.ReadInt32();
                     //br.AssertInt32(0);
-                    br.ReadInt32();
+                    T04 = br.ReadInt32();
                     //br.AssertInt32(0);
                 }
 
@@ -1761,6 +1772,8 @@ namespace SoulsFormats
                 /// </summary>
                 public float UnkT54 { get; set; }
 
+                public List<object> otherOtherUnks = new List<object>();
+
                 /// <summary>
                 /// Creates a Collision with default values.
                 /// </summary>
@@ -1791,19 +1804,19 @@ namespace SoulsFormats
                     SoundSpaceType = br.ReadByte();
                     br.AssertInt16(0);
                     ReflectPlaneHeight = br.ReadSingle();
-                    br.ReadInt32();
+                    otherOtherUnks.Add(br.ReadInt32());
                     //br.AssertInt32(-1);
-                    br.ReadInt32();
+                    otherOtherUnks.Add(br.ReadInt32());
                     //br.AssertInt32(-1);
-                    br.ReadInt32();
+                    otherOtherUnks.Add(br.ReadInt32());
                     //br.AssertInt32(-1);
                     MapNameID = br.ReadInt16();
                     DisableStart = br.ReadBoolean();
                     UnkT17 = br.ReadByte();
                     DisableBonfireEntityID = br.ReadInt32();
-                    br.ReadInt32();
+                    otherOtherUnks.Add(br.ReadInt32());
                     //br.AssertInt32(-1);
-                    br.ReadInt32();
+                    otherOtherUnks.Add(br.ReadInt32());
                     //br.AssertInt32(-1);
                     UnkT24 = br.ReadByte();
                     UnkT25 = br.ReadByte();
@@ -1811,13 +1824,13 @@ namespace SoulsFormats
                     MapVisibility = br.ReadByte();
                     PlayRegionID = br.ReadInt32();
                     LockCamParamID = br.ReadInt16();
-                    br.ReadInt16();
+                    otherOtherUnks.Add(br.ReadInt16());
                     //br.AssertInt16(-1);
-                    br.ReadInt32();
+                    otherOtherUnks.Add(br.ReadInt32());
                     //br.AssertInt32(-1);
-                    br.ReadInt32();
+                    otherOtherUnks.Add(br.ReadInt32());
                     //br.AssertInt32(-1);
-                    br.ReadInt32();
+                    otherOtherUnks.Add(br.ReadInt32());
                     //br.AssertInt32(-1);
                     UnkT3C = br.ReadInt32();
                     UnkT40 = br.ReadInt32();
@@ -1826,9 +1839,9 @@ namespace SoulsFormats
                     UnkT4C = br.ReadInt32();
                     UnkT50 = br.ReadSingle();
                     UnkT54 = br.ReadSingle();
-                    br.ReadInt32();
+                    otherOtherUnks.Add(br.ReadInt32());
                     //br.AssertInt32(0);
-                    br.ReadInt32();
+                    otherOtherUnks.Add(br.ReadInt32());
                     //br.AssertInt32(0);
                 }
 
@@ -2140,6 +2153,8 @@ namespace SoulsFormats
                 /// </summary>
                 public byte[] MapID { get; private set; }
 
+                public uint TypeId { get; set; }
+
                 /// <summary>
                 /// Creates a ConnectCollision with default values.
                 /// </summary>
@@ -2162,7 +2177,8 @@ namespace SoulsFormats
                     connect.MapID = (byte[])MapID.Clone();
                 }
 
-                internal UnkP1(BinaryReaderEx br) : base(br) {
+                internal UnkP1(BinaryReaderEx br, uint typeId) : base(br) {
+                    this.TypeId = typeId;
                 }
 
                 private protected override void ReadTypeData(BinaryReaderEx br)

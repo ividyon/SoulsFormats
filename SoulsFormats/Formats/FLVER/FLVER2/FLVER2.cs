@@ -138,7 +138,7 @@ namespace SoulsFormats
 
             br.AssertInt32(0);
             br.AssertInt32(0);
-            Header.Unk68 = br.AssertInt32(0, 1, 2, 3, 4);
+            Header.Unk68 = br.ReadInt32();//br.AssertInt32(0, 1, 2, 3, 4);
             br.AssertInt32(0);
             br.AssertInt32(0);
             br.AssertInt32(0);
