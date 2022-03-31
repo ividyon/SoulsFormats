@@ -219,8 +219,10 @@ namespace SoulsFormats
                         {
                             Normal = ReadUShortNormXYZ(br);
                             NormalW = br.ReadInt16();
-                        }
-                        else if (member.Type == LayoutType.Byte4E)
+                        } else if (member.Type == LayoutType.Byte4F) {
+                            Normal = ReadByteNormXYZ(br);
+                            NormalW = br.ReadByte();
+                        } else if (member.Type == LayoutType.Byte4E)
                         {
                             Normal = ReadByteNormXYZ(br);
                             NormalW = br.ReadByte();
@@ -250,8 +252,9 @@ namespace SoulsFormats
                         else if (member.Type == LayoutType.Byte4B)
                         {
                             UVs.Add(new Vector3(br.ReadInt16(), br.ReadInt16(), 0) / uvFactor);
-                        }
-                        else if (member.Type == LayoutType.Short2toFloat2)
+                        } else if (member.Type == LayoutType.Byte4F) {
+                            UVs.Add(new Vector3(br.ReadInt16(), br.ReadInt16(), 0) / uvFactor); //TODO maybe wrong
+                        } else if (member.Type == LayoutType.Short2toFloat2)
                         {
                             UVs.Add(new Vector3(br.ReadInt16(), br.ReadInt16(), 0) / uvFactor);
                         }
@@ -270,8 +273,12 @@ namespace SoulsFormats
                         }
                         else if (member.Type == LayoutType.Short4toFloat4B)
                         {
-                            UVs.Add(new Vector3(br.ReadInt16(), br.ReadInt16(), br.ReadInt16()) / uvFactor);
-                            br.AssertInt16(0);
+                            float x = br.ReadInt16();
+                            float y = br.ReadInt16();
+                            float z = br.ReadInt16();
+                            float w = br.ReadInt16();
+                            if (w == 0) w = uvFactor;
+                            UVs.Add(new Vector3(x / w, y / w, z / w) / uvFactor);
                         }
                         else
                             throw new NotImplementedException($"Read not implemented for {member.Type} {member.Semantic}.");
@@ -297,8 +304,9 @@ namespace SoulsFormats
                         else if (member.Type == LayoutType.Short4toFloat4A)
                         {
                             Tangents.Add(ReadShortNormXYZW(br));
-                        }
-                        else if (member.Type == LayoutType.Byte4E)
+                        } else if (member.Type == LayoutType.Byte4F) {
+                            Tangents.Add(ReadByteNormXYZW(br));
+                        } else if (member.Type == LayoutType.Byte4E)
                         {
                             Tangents.Add(ReadByteNormXYZW(br));
                         }
@@ -318,8 +326,9 @@ namespace SoulsFormats
                         else if (member.Type == LayoutType.Byte4C)
                         {
                             Bitangent = ReadByteNormXYZW(br);
-                        }
-                        else if (member.Type == LayoutType.Byte4E)
+                        } else if (member.Type == LayoutType.Byte4F) {
+                            Bitangent = ReadByteNormXYZW(br);
+                        } else if (member.Type == LayoutType.Byte4E)
                         {
                             Bitangent = ReadByteNormXYZW(br);
                         }

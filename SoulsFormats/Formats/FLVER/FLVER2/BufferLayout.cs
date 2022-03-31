@@ -35,6 +35,10 @@ namespace SoulsFormats
                     for (int i = 0; i < memberCount; i++)
                     {
                         var member = new FLVER.LayoutMember(br, structOffset);
+                        if (member.Unk00 != 0) {
+                            //memberCount--;
+                            continue;
+                        }
                         structOffset += member.Size;
                         Add(member);
                     }

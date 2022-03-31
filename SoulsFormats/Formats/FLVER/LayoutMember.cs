@@ -46,6 +46,7 @@ namespace SoulsFormats
                         case LayoutType.Short2toFloat2:
                         case LayoutType.Byte4C:
                         case LayoutType.UV:
+                        case LayoutType.Byte4F:
                         case LayoutType.Byte4E:
                             return 4;
 
@@ -82,7 +83,8 @@ namespace SoulsFormats
             internal LayoutMember(BinaryReaderEx br, int structOffset)
             {
                 Unk00 = br.ReadInt32();
-                br.AssertInt32(structOffset);
+                //br.AssertInt32(structOffset);
+                br.ReadInt32();
                 Type = br.ReadEnum32<LayoutType>();
                 Semantic = br.ReadEnum32<LayoutSemantic>();
                 Index = br.ReadInt32();
@@ -165,6 +167,11 @@ namespace SoulsFormats
             /// Four shorts.
             /// </summary>
             Short4toFloat4A = 0x1A,
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            Byte4F = 0x2D,
 
             /// <summary>
             /// Unknown.

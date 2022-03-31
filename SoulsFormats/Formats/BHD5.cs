@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.OpenSsl;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -35,13 +38,49 @@ namespace SoulsFormats
         /// </summary>
         public List<Bucket> Buckets { get; set; }
 
+        public readonly Dictionary<string, FileHeader> fileHeaders = new();
+
+        private readonly FileNameDictionary? fileNameDictionary;
+
         /// <summary>
         /// Read a dvdbnd header from the given stream, formatted for the given game. Must already be decrypted, if applicable.
         /// </summary>
-        public static BHD5 Read(Stream bhdStream, Game game)
+        public static BHD5 Read(Stream bhdStream, Game game, string archiveName)
         {
             var br = new BinaryReaderEx(false, bhdStream);
-            return new BHD5(br, game);
+            return new BHD5(br, game, archiveName);
+        }
+
+        /// <summary>
+        /// Read a dvdbnd header from the given file name, formatted for the given game.
+        /// </summary>
+        public static BHD5 Read(string fileName, Game game)
+        {
+            var bytes = File.ReadAllBytes(fileName);
+            var archiveName = Path.GetFileNameWithoutExtension(fileName);
+            string key = ErRsaKeyDictionary[archiveName];
+            PemReader pemReader = new(new StringReader(key));
+            AsymmetricKeyParameter keyParameter = (AsymmetricKeyParameter)pemReader.ReadObject();
+            RsaEngine engine = new();
+            engine.Init(false, keyParameter);
+
+            int inputBlockSize = engine.GetInputBlockSize();
+            int outputBlockSize = engine.GetOutputBlockSize();
+            MemoryStream outputStream = new(); 
+            for(int i = 0; i < bytes.Length; i += inputBlockSize) {
+                byte[] outputBlock = engine.ProcessBlock(bytes, i, inputBlockSize);
+
+                int requiredPadding = outputBlockSize - outputBlock.Length;
+                if (requiredPadding > 0) {
+                    byte[] paddedOutputBlock = new byte[outputBlockSize];
+                    outputBlock.CopyTo(paddedOutputBlock, requiredPadding);
+                    outputBlock = paddedOutputBlock;
+                }
+                outputStream.Write(outputBlock, 0, outputBlock.Length);
+
+            }
+            outputStream.Seek(0, SeekOrigin.Begin);
+            return Read(outputStream, game, archiveName);
         }
 
         /// <summary>
@@ -64,8 +103,9 @@ namespace SoulsFormats
             Buckets = new List<Bucket>();
         }
 
-        private BHD5(BinaryReaderEx br, Game game)
+        private BHD5(BinaryReaderEx br, Game game, string archiveName)
         {
+            if (game == Game.EldenRing) fileNameDictionary = new FileNameDictionary(game);
             Format = game;
 
             br.AssertASCII("BHD5");
@@ -89,7 +129,14 @@ namespace SoulsFormats
             br.Position = bucketsOffset;
             Buckets = new List<Bucket>(bucketCount);
             for (int i = 0; i < bucketCount; i++)
-                Buckets.Add(new Bucket(br, game));
+                Buckets.Add(new Bucket(br, game, fileNameDictionary, archiveName));
+            if (fileNameDictionary != null) {
+                foreach (var bucket in Buckets) {
+                    foreach (var entry in bucket) {
+                        if (entry.FileName != null) fileHeaders[entry.FileName] = entry;
+                    }
+                }
+            }
         }
 
         private void Write(BinaryWriterEx bw)
@@ -149,6 +196,11 @@ namespace SoulsFormats
             /// Sekiro on PC.
             /// </summary>
             Sekiro,
+
+            /// <summary>
+            /// Elden Ring on PC.
+            /// </summary>
+            EldenRing,
         }
 
         /// <summary>
@@ -161,7 +213,7 @@ namespace SoulsFormats
             /// </summary>
             public Bucket() : base() { }
 
-            internal Bucket(BinaryReaderEx br, Game game) : base()
+            internal Bucket(BinaryReaderEx br, Game game, FileNameDictionary fileNameDictionary, string archiveName) : base()
             {
                 int fileHeaderCount = br.ReadInt32();
                 int fileHeadersOffset = br.ReadInt32();
@@ -170,7 +222,7 @@ namespace SoulsFormats
                 br.StepIn(fileHeadersOffset);
                 {
                     for (int i = 0; i < fileHeaderCount; i++)
-                        Add(new FileHeader(br, game));
+                        Add(new FileHeader(br, game, fileNameDictionary, archiveName));
                 }
                 br.StepOut();
             }
@@ -197,7 +249,12 @@ namespace SoulsFormats
             /// <summary>
             /// Hash of the full file path using From's algorithm found in SFUtil.FromPathHash.
             /// </summary>
-            public uint FileNameHash { get; set; }
+            public ulong FileNameHash { get; set; }
+
+            /// <summary>
+            /// Name and path of the file, if available
+            /// </summary>
+            public string? FileName { get; set; }
 
             /// <summary>
             /// Full size of the file data in the BDT.
@@ -229,10 +286,20 @@ namespace SoulsFormats
             /// </summary>
             public FileHeader() { }
 
-            internal FileHeader(BinaryReaderEx br, Game game)
+            internal FileHeader(BinaryReaderEx br, Game game, FileNameDictionary? fileNameDictionary, string archiveName)
             {
-                FileNameHash = br.ReadUInt32();
-                PaddedFileSize = br.ReadInt32();
+                if (game >= Game.EldenRing) {
+                    FileNameHash = br.ReadUInt64();
+                    PaddedFileSize = br.ReadInt32();
+                    UnpaddedFileSize = br.ReadInt32();
+                    if (UnpaddedFileSize == 0) UnpaddedFileSize = PaddedFileSize;
+                    if (fileNameDictionary != null) {
+                        FileName = fileNameDictionary.TryGetFilename(FileNameHash, archiveName, "UNKNOWN");
+                    }
+                } else {
+                    FileNameHash = br.ReadUInt32();
+                    PaddedFileSize = br.ReadInt32();
+                }
                 FileOffset = br.ReadInt64();
 
                 if (game >= Game.DarkSouls2)
@@ -259,17 +326,25 @@ namespace SoulsFormats
                     }
                 }
 
-                UnpaddedFileSize = -1;
-                if (game >= Game.DarkSouls3)
-                {
-                    UnpaddedFileSize = br.ReadInt64();
+                if (game < Game.EldenRing) {
+                    UnpaddedFileSize = -1;
+                    if (game == Game.DarkSouls3) {
+                        UnpaddedFileSize = br.ReadInt64();
+                    }
                 }
             }
 
             internal void Write(BinaryWriterEx bw, Game game, int bucketIndex, int fileIndex)
             {
-                bw.WriteUInt32(FileNameHash);
-                bw.WriteInt32(PaddedFileSize);
+                if (game >= Game.EldenRing) {
+                    bw.WriteUInt64(FileNameHash);
+                    bw.WriteInt32(PaddedFileSize);
+                    if (PaddedFileSize == UnpaddedFileSize) bw.WriteInt32(0);
+                    else bw.WriteInt32((int)UnpaddedFileSize);
+                } else {
+                    bw.WriteUInt32((uint)FileNameHash);
+                    bw.WriteInt32(PaddedFileSize);
+                }
                 bw.WriteInt64(FileOffset);
 
                 if (game >= Game.DarkSouls2)
@@ -278,7 +353,7 @@ namespace SoulsFormats
                     bw.ReserveInt64($"AESKeyOffset{bucketIndex}:{fileIndex}");
                 }
 
-                if (game >= Game.DarkSouls3)
+                if (game == Game.DarkSouls3)
                 {
                     bw.WriteInt64(UnpaddedFileSize);
                 }
@@ -432,6 +507,19 @@ namespace SoulsFormats
         }
 
         /// <summary>
+        /// Hashes a file name using the 64-bit hash algorithm.
+        /// </summary>
+        public static ulong HashFileName(string filePath, ulong prime = 133u)
+        {
+            if (string.IsNullOrEmpty(filePath))
+                return 0u;
+            return filePath.Replace('\\', '/')
+                .ToLowerInvariant()
+                .Aggregate(0ul, (i, c) => i * prime + c);
+        }
+
+
+        /// <summary>
         /// Indicates a hashed or encrypted section of a file.
         /// </summary>
         public struct Range
@@ -467,5 +555,195 @@ namespace SoulsFormats
                 bw.WriteInt64(EndOffset);
             }
         }
+
+        internal class FileNameDictionary
+        {
+            private static readonly string[] VirtualRoots = {
+                @"N:\GR\data\INTERROOT_win64\",
+                @"N:\FDP\data\INTERROOT_win64\",
+                @"N:\FDP\data\INTERROOT_win64_havok2018_1\",
+                @"N:\GR\data\INTERROOT_win64_havok2018_1\",
+                @"N:\GR\data\",
+                @"N:\SPRJ\data\",
+                @"N:\FDP\data\",
+                @"N:\NTC\",
+                @"N:\"
+            };
+
+            private static readonly string[] PhysicalRoots = {
+                "data0",
+                "data1",
+                "data2",
+                "data3",
+                "debugdata",
+                "dvdroot",
+                "hkxbnd",
+                "tpfbnd",
+                "sd"
+            };
+
+            private static readonly Dictionary<string, string> AliasMap = new() {
+                { "testdata", "debugdata:/testdata" },
+                { "other", "data0:/other" },
+                { "mapinfotex", "data0:/other/mapinfotex" },
+                { "material", "data0:/material" },
+                { "mtdbnd", "data0:/mtd" },
+                { "shader", "data0:/shader" },
+                { "shadertestdata", "debugdata:/testdata/Shaderbdle" },
+                { "debugfont", "dvdroot:/font" },
+                { "font", "data0:/font" },
+                { "chrbnd", "data3:/chr" },
+                { "chranibnd", "data3:/chr" },
+                { "chrbehbnd", "data3:/chr" },
+                { "chrtexbnd", "data3:/chr" },
+                { "chrtpf", "data3:/chr" },
+                { "action", "data0:/action" },
+                { "actscript", "data0:/action/script" },
+                { "obj", "data0:/obj" },
+                { "objbnd", "data0:/obj" },
+                { "map", "data2:/map" },
+                { "debugmap", "debugdata:/map" },
+                { "maphkx", "data2:/map" },
+                { "maptpf", "data2:/map" },
+                { "mapstudio", "data2:/map/mapstudio" },
+                { "breakobj", "data2:/map/breakobj" },
+                { "breakgeom", "data2:/map/breakgeom" },
+                { "entryfilelist", "data2:/map/entryfilelist" },
+                { "onav", "data2:/map/onav" },
+                { "script", "data0:/script" },
+                { "talkscript", "data0:/script/talk" },
+                { "aiscript", "data0:/script" },
+                { "msg", "data0:/msg" },
+                { "param", "data0:/param" },
+                { "paramdef", "debugdata:/paramdef" },
+                { "gparam", "data0:/param/drawparam" },
+                { "event", "data0:/event" },
+                { "menu", "data0:/menu" },
+                { "menutexture", "data0:/menu" },
+                { "parts", "data0:/parts" },
+                { "facegen", "data0:/facegen" },
+                { "cutscene", "data0:/cutscene" },
+                { "cutscenebnd", "data0:/cutscene" },
+                { "movie", "data0:/movie" },
+                { "wwise_mobnkinfo", "data0:/sound" },
+                { "wwise_moaeibnd", "data0:/sound" },
+                { "wwise_testdata", "debugdata:/testdata/sound" },
+                { "wwise_pck", "data0:/sound/pck" },
+                { "wwise", "sd:" },
+                { "sfx", "data0:/sfx" },
+                { "sfxbnd", "data0:/sfx" },
+                { "patch_sfxbnd", "data0:/sfx" },
+                { "title", "data0:/adhoc" },
+                { "", "data0:/adhoc" },
+                { "dbgai", "data0:/script_interroot" },
+                { "dbgactscript", "data0:/script_interroot/action" },
+                { "menuesd_dlc", "data0:/script_interroot/action" },
+                { "luascriptpatch", "data0:/script_interroot/action" },
+                { "asset", "data1:/asset" },
+                { "expression", "data0:/expression" }
+            };
+            
+            //id -> (root, name)
+            private readonly Dictionary<ulong, List<(string, string)>> dict = new();
+
+            public FileNameDictionary(Game game)
+            {
+                if (game != Game.EldenRing) throw new System.ArgumentException("Dictionary only supported for Elden Ring");
+                var lines = File.ReadAllLines(@"BHDDictionaries\DictionaryER.csv");
+                foreach (var line in lines) {
+                    string root = "";
+                    string name = line;
+                    while (true) {
+                        var ind = name.IndexOf(':');
+                        if (ind == -1) break;
+                        var alias = name[..ind];
+                        name = name[(ind+1)..];
+                        if (PhysicalRoots.Contains(alias)) {
+                            root = alias;
+                            break;
+                        }
+                        var aliasVal = AliasMap[alias];
+                        name = aliasVal + name;
+                    }
+                    var hash = HashFileName(name);
+                    if (!dict.TryGetValue(hash, out List<(string, string)> entry)) {
+                        entry = new List<(string, string)>();
+                        dict.Add(hash, entry);
+                    }
+                    entry.Add((root, name));
+                }
+            }
+
+            public string? TryGetFilename(ulong hash, string root, string extension)
+            {
+                if (!dict.TryGetValue(hash, out List<(string, string)> entry)) return null;
+                if (entry.Count == 1) return entry[0].Item2;
+                string? filename = null;
+                bool needExtension = false;
+                foreach (var (eRoot, eName) in entry) {
+                    if (eRoot != root) continue;
+                    if (needExtension && !eName.EndsWith(extension)) continue;
+                    if (filename != null) {
+                        bool a = filename.EndsWith(extension);
+                        bool b = eName.EndsWith(extension);
+                        if (a && b) throw new InvalidDataException($"Ambiguous filename for hash {hash}");
+                        needExtension = true;
+                        if (b) filename = eName;
+                        else if (!a) filename = null;
+                    } 
+                    else filename = eName;
+                }
+                return filename;
+            }
+        }
+
+        public static Dictionary<string, string> ErRsaKeyDictionary = new(System.StringComparer.InvariantCultureIgnoreCase)
+        {
+            { "Data0", @"-----BEGIN RSA PUBLIC KEY-----
+MIIBCwKCAQEA9Rju2whruXDVQZpfylVEPeNxm7XgMHcDyaaRUIpXQE0qEo+6Y36L
+P0xpFvL0H0kKxHwpuISsdgrnMHJ/yj4S61MWzhO8y4BQbw/zJehhDSRCecFJmFBz
+3I2JC5FCjoK+82xd9xM5XXdfsdBzRiSghuIHL4qk2WZ/0f/nK5VygeWXn/oLeYBL
+jX1S8wSSASza64JXjt0bP/i6mpV2SLZqKRxo7x2bIQrR1yHNekSF2jBhZIgcbtMB
+xjCywn+7p954wjcfjxB5VWaZ4hGbKhi1bhYPccht4XnGhcUTWO3NmJWslwccjQ4k
+sutLq3uRjLMM0IeTkQO6Pv8/R7UNFtdCWwIERzH8IQ==
+-----END RSA PUBLIC KEY-----" 
+            },
+            { "Data1", @"-----BEGIN RSA PUBLIC KEY-----
+MIIBCwKCAQEAxaBCHQJrtLJiJNdG9nq3deA9sY4YCZ4dbTOHO+v+YgWRMcE6iK6o
+ZIJq+nBMUNBbGPmbRrEjkkH9M7LAypAFOPKC6wMHzqIMBsUMuYffulBuOqtEBD11
+CAwfx37rjwJ+/1tnEqtJjYkrK9yyrIN6Y+jy4ftymQtjk83+L89pvMMmkNeZaPON
+4O9q5M9PnFoKvK8eY45ZV/Jyk+Pe+xc6+e4h4cx8ML5U2kMM3VDAJush4z/05hS3
+/bC4B6K9+7dPwgqZgKx1J7DBtLdHSAgwRPpijPeOjKcAa2BDaNp9Cfon70oC+ZCB
++HkQ7FjJcF7KaHsH5oHvuI7EZAl2XTsLEQIENa/2JQ==
+-----END RSA PUBLIC KEY-----" 
+            },
+            { "Data2", @"-----BEGIN RSA PUBLIC KEY-----
+MIIBDAKCAQEA0iDVVQ230RgrkIHJNDgxE7I/2AaH6Li1Eu9mtpfrrfhfoK2e7y4O
+WU+lj7AGI4GIgkWpPw8JHaV970Cr6+sTG4Tr5eMQPxrCIH7BJAPCloypxcs2BNfT
+GXzm6veUfrGzLIDp7wy24lIA8r9ZwUvpKlN28kxBDGeCbGCkYeSVNuF+R9rN4OAM
+RYh0r1Q950xc2qSNloNsjpDoSKoYN0T7u5rnMn/4mtclnWPVRWU940zr1rymv4Jc
+3umNf6cT1XqrS1gSaK1JWZfsSeD6Dwk3uvquvfY6YlGRygIlVEMAvKrDRMHylsLt
+qqhYkZNXMdy0NXopf1rEHKy9poaHEmJldwIFAP////8=
+-----END RSA PUBLIC KEY-----" 
+            },
+            { "Data3", @"-----BEGIN RSA PUBLIC KEY-----
+MIIBCwKCAQEAvRRNBnVq3WknCNHrJRelcEA2v/OzKlQkxZw1yKll0Y2Kn6G9ts94
+SfgZYbdFCnIXy5NEuyHRKrxXz5vurjhrcuoYAI2ZUhXPXZJdgHywac/i3S/IY0V/
+eDbqepyJWHpP6I565ySqlol1p/BScVjbEsVyvZGtWIXLPDbx4EYFKA5B52uK6Gdz
+4qcyVFtVEhNoMvg+EoWnyLD7EUzuB2Khl46CuNictyWrLlIHgpKJr1QD8a0ld0PD
+PHDZn03q6QDvZd23UW2d9J+/HeBt52j08+qoBXPwhndZsmPMWngQDaik6FM7EVRQ
+etKPi6h5uprVmMAS5wR/jQIVTMpTj/zJdwIEXszeQw==
+-----END RSA PUBLIC KEY-----" 
+            },
+            { "sd", @"-----BEGIN RSA PUBLIC KEY-----
+MIIBCwKCAQEAmYJ/5GJU4boJSvZ81BFOHYTGdBWPHnWYly3yWo01BYjGRnz8NTkz
+DHUxsbjIgtG5XqsQfZstZILQ97hgSI5AaAoCGrT8sn0PeXg2i0mKwL21gRjRUdvP
+Dp1Y+7hgrGwuTkjycqqsQ/qILm4NvJHvGRd7xLOJ9rs2zwYhceRVrq9XU2AXbdY4
+pdCQ3+HuoaFiJ0dW0ly5qdEXjbSv2QEYe36nWCtsd6hEY9LjbBX8D1fK3D2c6C0g
+NdHJGH2iEONUN6DMK9t0v2JBnwCOZQ7W+Gt7SpNNrkx8xKEM8gH9na10g9ne11Mi
+O1FnLm8i4zOxVdPHQBKICkKcGS1o3C2dfwIEXw/f3w==
+-----END RSA PUBLIC KEY-----" 
+            },
+        };
     }
 }

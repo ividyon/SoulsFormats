@@ -83,7 +83,7 @@ namespace SoulsFormats
                 int boneOffset = br.ReadInt32();
                 int faceSetCount = br.ReadInt32();
                 int faceSetOffset = br.ReadInt32();
-                int vertexBufferCount = br.AssertInt32(1, 2, 3);
+                int vertexBufferCount = br.AssertInt32(0, 1, 2, 3);
                 int vertexBufferOffset = br.ReadInt32();
 
                 if (boundingBoxOffset != 0)
@@ -157,6 +157,7 @@ namespace SoulsFormats
 
             internal void ReadVertices(BinaryReaderEx br, int dataOffset, List<BufferLayout> layouts, FLVERHeader header)
             {
+                if (VertexBuffers.Count == 0) return;
                 var layoutMembers = layouts.SelectMany(l => l);
                 int uvCap = layoutMembers.Where(m => m.Semantic == FLVER.LayoutSemantic.UV).Count();
                 int tanCap = layoutMembers.Where(m => m.Semantic == FLVER.LayoutSemantic.Tangent).Count();
