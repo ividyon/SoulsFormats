@@ -31,7 +31,7 @@ namespace SoulsFormats
         /// <summary>
         /// A salt used to calculate SHA hashes for file data.
         /// </summary>
-        public string Salt { get; set; }
+        public string? Salt { get; set; }
 
         /// <summary>
         /// Collections of files grouped by their hash value for faster lookup.
@@ -66,15 +66,15 @@ namespace SoulsFormats
 
             int inputBlockSize = engine.GetInputBlockSize();
             int outputBlockSize = engine.GetOutputBlockSize();
-            MemoryStream outputStream = new(); 
+            int numBlocks = bytes.Length / inputBlockSize;
+            MemoryStream outputStream = new((numBlocks + 1) * outputBlockSize);
+            byte[] padding = new byte[outputBlockSize];
             for(int i = 0; i < bytes.Length; i += inputBlockSize) {
                 byte[] outputBlock = engine.ProcessBlock(bytes, i, inputBlockSize);
 
                 int requiredPadding = outputBlockSize - outputBlock.Length;
                 if (requiredPadding > 0) {
-                    byte[] paddedOutputBlock = new byte[outputBlockSize];
-                    outputBlock.CopyTo(paddedOutputBlock, requiredPadding);
-                    outputBlock = paddedOutputBlock;
+                    outputStream.Write(padding, 0, requiredPadding);
                 }
                 outputStream.Write(outputBlock, 0, outputBlock.Length);
 
@@ -154,8 +154,8 @@ namespace SoulsFormats
 
             if (Format >= Game.DarkSouls2)
             {
-                bw.WriteInt32(Salt.Length);
-                bw.WriteASCII(Salt);
+                bw.WriteInt32(Salt?.Length ?? 0);
+                bw.WriteASCII(Salt ?? "");
             }
 
             bw.FillInt32("BucketsOffset", (int)bw.Position);
@@ -213,7 +213,7 @@ namespace SoulsFormats
             /// </summary>
             public Bucket() : base() { }
 
-            internal Bucket(BinaryReaderEx br, Game game, FileNameDictionary fileNameDictionary, string archiveName) : base()
+            internal Bucket(BinaryReaderEx br, Game game, FileNameDictionary? fileNameDictionary, string archiveName) : base()
             {
                 int fileHeaderCount = br.ReadInt32();
                 int fileHeadersOffset = br.ReadInt32();
@@ -448,7 +448,15 @@ namespace SoulsFormats
         /// </summary>
         public class AESKey
         {
-            private static AesManaged AES = new AesManaged() { Mode = CipherMode.ECB, Padding = PaddingMode.None, KeySize = 128 };
+            private static readonly Aes AES;
+
+            static AESKey()
+            {
+                AES = Aes.Create();
+                AES.Mode = CipherMode.ECB;
+                AES.Padding = PaddingMode.None;
+                AES.KeySize = 128;
+            }
 
             /// <summary>
             /// 16-byte encryption key.

@@ -10,11 +10,10 @@ namespace SoulsFormats
         internal enum ModelType : uint
         {
             MapPiece = 0,
-            Object = 1,
             Enemy = 2,
             Player = 4,
             Collision = 5,
-            Geometry = 0xA,
+            Object = 0xA,
         }
 
         /// <summary>
@@ -47,8 +46,6 @@ namespace SoulsFormats
             /// </summary>
             public List<Model.Collision> Collisions { get; set; }
 
-            public List<Model.Geometry> Geometry { get; set; }
-
             /// <summary>
             /// Creates an empty ModelParam with the default version.
             /// </summary>
@@ -59,7 +56,6 @@ namespace SoulsFormats
                 Enemies = new List<Model.Enemy>();
                 Players = new List<Model.Player>();
                 Collisions = new List<Model.Collision>();
-                Geometry = new List<Model.Geometry>();
             }
 
             /// <summary>
@@ -68,7 +64,6 @@ namespace SoulsFormats
             public Model Add(Model model)
             {
                 switch (model) {
-                    case Model.Geometry m: Geometry.Add(m); break;
                     case Model.MapPiece m: MapPieces.Add(m); break;
                     case Model.Object m: Objects.Add(m); break;
                     case Model.Enemy m: Enemies.Add(m); break;
@@ -111,9 +106,6 @@ namespace SoulsFormats
 
                     case ModelType.Collision:
                         return Collisions.EchoAdd(new Model.Collision(br));
-
-                    case ModelType.Geometry:
-                        return Geometry.EchoAdd(new Model.Geometry(br));
 
                     default:
                         throw new NotImplementedException($"Unimplemented model type: {type}");
@@ -232,15 +224,6 @@ namespace SoulsFormats
             public override string ToString()
             {
                 return $"{Type} {Name}";
-            }
-
-            public class Geometry : MapPiece
-            {
-                public Geometry(BinaryReaderEx br) : base(br)
-                {
-                }
-
-                private protected override ModelType Type => ModelType.Geometry;
             }
 
             /// <summary>

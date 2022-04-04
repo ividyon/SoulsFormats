@@ -846,6 +846,9 @@ namespace SoulsFormats
                     bw.WritePattern(0x20, 0x00);
                 }
 
+                /// <summary>
+                /// Returns a string representation of the object.
+                /// </summary>
                 public override string ToString()
                 {
                     string dgroups = DispGroups.Aggregate("", (a, b) => a + ", " + b)[2..];
