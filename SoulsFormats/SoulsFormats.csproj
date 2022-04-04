@@ -5,6 +5,7 @@
     <Copyright>Copyright © Joseph Anderson 2019</Copyright>
     <Description>A .NET library for reading and writing FromSoftware file formats.</Description>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Company>JKAnderson</Company>
     <Authors>Joseph Anderson</Authors>
     <PackageProjectUrl>https://github.com/JKAnderson/SoulsFormats</PackageProjectUrl>
@@ -20,6 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="bhd5_decrypt_rust.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="BHDDictionaries\DictionaryER.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -1,10 +1,14 @@
 ﻿using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.OpenSsl;
+using SoulsFormats.Util;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace SoulsFormats
 {
@@ -59,28 +63,8 @@ namespace SoulsFormats
             var bytes = File.ReadAllBytes(fileName);
             var archiveName = Path.GetFileNameWithoutExtension(fileName);
             string key = ErRsaKeyDictionary[archiveName];
-            PemReader pemReader = new(new StringReader(key));
-            AsymmetricKeyParameter keyParameter = (AsymmetricKeyParameter)pemReader.ReadObject();
-            RsaEngine engine = new();
-            engine.Init(false, keyParameter);
-
-            int inputBlockSize = engine.GetInputBlockSize();
-            int outputBlockSize = engine.GetOutputBlockSize();
-            int numBlocks = bytes.Length / inputBlockSize;
-            MemoryStream outputStream = new((numBlocks + 1) * outputBlockSize);
-            byte[] padding = new byte[outputBlockSize];
-            for(int i = 0; i < bytes.Length; i += inputBlockSize) {
-                byte[] outputBlock = engine.ProcessBlock(bytes, i, inputBlockSize);
-
-                int requiredPadding = outputBlockSize - outputBlock.Length;
-                if (requiredPadding > 0) {
-                    outputStream.Write(padding, 0, requiredPadding);
-                }
-                outputStream.Write(outputBlock, 0, outputBlock.Length);
-
-            }
-            outputStream.Seek(0, SeekOrigin.Begin);
-            return Read(outputStream, game, archiveName);
+            var decrypted = NativeRsa.Decrypt(bytes, key, Environment.ProcessorCount > 8 ? Environment.ProcessorCount / 2 : 4);
+            return Read(new MemoryStream(decrypted), game, archiveName);
         }
 
         /// <summary>

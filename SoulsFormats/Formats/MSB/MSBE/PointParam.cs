@@ -1641,6 +1641,7 @@ namespace SoulsFormats
                 private protected override RegionType Type => RegionType.Unk1;
                 private protected override bool HasTypeData => true;
 
+                //TODO, can be 8 or 12 bytes...
                 /// <summary>
                 /// Unknown.
                 /// </summary>
