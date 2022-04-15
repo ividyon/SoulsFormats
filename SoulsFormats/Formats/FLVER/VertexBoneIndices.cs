@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace SoulsFormats
 {
@@ -7,7 +9,7 @@ namespace SoulsFormats
         /// <summary>
         /// Four indices of bones to bind a vertex to, accessed like an array. Unused bones should be set to 0.
         /// </summary>
-        public struct VertexBoneIndices
+        public struct VertexBoneIndices: IEnumerable<int>
         {
             private int A, B, C, D;
 
@@ -46,6 +48,23 @@ namespace SoulsFormats
                             throw new IndexOutOfRangeException($"Index ({i}) was out of range. Must be non-negative and less than 4.");
                     }
                 }
+            }
+
+            /// <summary>
+            /// Enumerates through all four bone indicies
+            /// </summary>
+            /// <returns></returns>
+            public IEnumerator<int> GetEnumerator()
+            {
+                yield return A;
+                yield return B;
+                yield return C;
+                yield return D;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
             }
         }
     }
