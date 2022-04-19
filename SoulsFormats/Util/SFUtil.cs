@@ -524,8 +524,6 @@ namespace SoulsFormats
 
                 byte[] iv = new byte[16];
 
-
-
                 using (CryptoStream cs = new CryptoStream(ms, cryptor.CreateEncryptor(key, iv), CryptoStreamMode.Write))
                 {
                     cs.Write(secret, 0, secret.Length);
