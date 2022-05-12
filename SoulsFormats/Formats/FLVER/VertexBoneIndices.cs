@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace SoulsFormats
 {
@@ -7,7 +9,7 @@ namespace SoulsFormats
         /// <summary>
         /// Four indices of bones to bind a vertex to, accessed like an array. Unused bones should be set to 0.
         /// </summary>
-        public struct VertexBoneIndices
+        public struct VertexBoneIndices : IEnumerable
         {
             private int A, B, C, D;
 
@@ -47,6 +49,10 @@ namespace SoulsFormats
                     }
                 }
             }
+
+            private List<int> VBIs => new List<int> {A, B, C, D};
+            public IEnumerator<int> GetEnumerator() => VBIs.GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
     }
 }
