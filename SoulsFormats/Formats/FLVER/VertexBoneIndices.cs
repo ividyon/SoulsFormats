@@ -9,7 +9,11 @@ namespace SoulsFormats
         /// <summary>
         /// Four indices of bones to bind a vertex to, accessed like an array. Unused bones should be set to 0.
         /// </summary>
+<<<<<<< HEAD
         public struct VertexBoneIndices : IEnumerable
+=======
+        public struct VertexBoneIndices: IEnumerable<int>
+>>>>>>> b2ecbfe895c8f7619366a0ee196e6bfa9b08c39b
         {
             private int A, B, C, D;
 
@@ -50,9 +54,28 @@ namespace SoulsFormats
                 }
             }
 
+<<<<<<< HEAD
             private List<int> VBIs => new List<int> {A, B, C, D};
             public IEnumerator<int> GetEnumerator() => VBIs.GetEnumerator();
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+=======
+            /// <summary>
+            /// Enumerates through all four bone indicies
+            /// </summary>
+            /// <returns></returns>
+            public IEnumerator<int> GetEnumerator()
+            {
+                yield return A;
+                yield return B;
+                yield return C;
+                yield return D;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+>>>>>>> b2ecbfe895c8f7619366a0ee196e6bfa9b08c39b
         }
     }
 }

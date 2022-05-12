@@ -522,7 +522,7 @@ namespace SoulsFormats
                 cryptor.KeySize = 256;
                 cryptor.BlockSize = 128;
 
-                byte[] iv = cryptor.IV;
+                byte[] iv = new byte[16];
 
                 using (CryptoStream cs = new CryptoStream(ms, cryptor.CreateEncryptor(key, iv), CryptoStreamMode.Write))
                 {
