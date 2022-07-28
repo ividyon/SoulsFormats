@@ -322,12 +322,14 @@ namespace SoulsFormats
             private protected Part(string name)
             {
                 Name = name;
+                ModelName = "";
                 SibPath = "";
                 Scale = Vector3.One;
                 EntityID = -1;
                 EntityGroupIDs = new int[8];
                 for (int i = 0; i < 8; i++)
                     EntityGroupIDs[i] = -1;
+                UnkE44 = new byte[0x10];
             }
 
             /// <summary>
@@ -344,6 +346,7 @@ namespace SoulsFormats
 
             private protected virtual void DeepCopyTo(Part part) { }
 
+#pragma warning disable CS8618
             private protected Part(BinaryReaderEx br)
             {
                 long start = br.Position;
@@ -461,6 +464,7 @@ namespace SoulsFormats
                     ReadUnk11(br);
                 }
             }
+#pragma warning restore CS8618
 
             private void ReadEntityData(BinaryReaderEx br)
             {
@@ -778,6 +782,9 @@ namespace SoulsFormats
                     bw.WritePattern(0xC0, 0x00);
                 }
 
+                /// <summary>
+                /// Returns a string representation of the object.
+                /// </summary>
                 public override string ToString()
                 {
                     string cmask = CollisionMask.Aggregate("", (a, b) => a +", "+ b)[2..];
@@ -1068,6 +1075,9 @@ namespace SoulsFormats
                     bw.WriteInt32(0);
                 }
 
+                /// <summary>
+                /// Returns a string representation of the object.
+                /// </summary>
                 public override string ToString()
                 {
                     return $"{Unk00} {Unk04} {GrassTypeParamID} {Unk0C} {Unk10} {Unk14} {Unk18}";
@@ -1156,6 +1166,9 @@ namespace SoulsFormats
                     bw.WriteInt32(Unk1C);
                 }
 
+                /// <summary>
+                /// Returns a string representation of the object.
+                /// </summary>
                 public override string ToString()
                 {
                     return $"{Unk00} {Unk04} {Unk08} {Unk0C} {Unk10} {Unk14} {Unk18} {Unk1C}";
@@ -1244,6 +1257,9 @@ namespace SoulsFormats
                     bw.WriteInt32(Unk1C);
                 }
 
+                /// <summary>
+                /// Returns a string representation of the object.
+                /// </summary>
                 public override string ToString()
                 {
                     return $"{Unk00} {Unk04} {Unk08} {Unk0C} {Unk10} {Unk14} {Unk18} {Unk1C}";
@@ -1332,6 +1348,9 @@ namespace SoulsFormats
                     bw.WriteInt32(Unk1C);
                 }
 
+                /// <summary>
+                /// Returns a string representation of the object.
+                /// </summary>
                 public override string ToString()
                 {
                     return $"{Unk00} {Unk04} {Unk08} {Unk0C} {Unk10} {Unk14} {Unk18} {Unk1C}";
@@ -1420,6 +1439,9 @@ namespace SoulsFormats
                     bw.WriteInt32(Unk1C);
                 }
 
+                /// <summary>
+                /// Returns a string representation of the object.
+                /// </summary>
                 public override string ToString()
                 {
                     return $"{Unk00} {Unk04} {Unk08} {Unk0C} {Unk10} {Unk14} {Unk18} {Unk1C}";
@@ -1519,7 +1541,9 @@ namespace SoulsFormats
                     piece.Unk11 = Unk11.DeepCopy();
                 }
 
+#pragma warning disable CS8618
                 internal MapPiece(BinaryReaderEx br) : base(br) { }
+#pragma warning restore CS8618
 
                 private protected override void ReadTypeData(BinaryReaderEx br)
                 {

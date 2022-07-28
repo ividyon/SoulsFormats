@@ -41,6 +41,9 @@ namespace SoulsFormats
         /// Collections of files grouped by their hash value for faster lookup.
         /// </summary>
         public List<Bucket> Buckets { get; set; }
+        /// <summary>
+        /// List of file headers by file name. Only contains headers with known names
+        /// </summary>
 
         public readonly Dictionary<string, FileHeader> fileHeaders = new();
 
@@ -658,7 +661,7 @@ namespace SoulsFormats
                         name = aliasVal + name;
                     }
                     var hash = HashFileName(name);
-                    if (!dict.TryGetValue(hash, out List<(string, string)> entry)) {
+                    if (!dict.TryGetValue(hash, out List<(string, string)>? entry)) {
                         entry = new List<(string, string)>();
                         dict.Add(hash, entry);
                     }
@@ -668,7 +671,7 @@ namespace SoulsFormats
 
             public string? TryGetFilename(ulong hash, string root, string extension)
             {
-                if (!dict.TryGetValue(hash, out List<(string, string)> entry)) return null;
+                if (!dict.TryGetValue(hash, out List<(string, string)>? entry)) return null;
                 if (entry.Count == 1) return entry[0].Item2;
                 string? filename = null;
                 bool needExtension = false;
@@ -689,6 +692,9 @@ namespace SoulsFormats
             }
         }
 
+        /// <summary>
+        /// RSA public keys in PKCS1 PEM format for Elden Ring bhd files
+        /// </summary>
         public static Dictionary<string, string> ErRsaKeyDictionary = new(System.StringComparer.InvariantCultureIgnoreCase)
         {
             { "Data0", @"-----BEGIN RSA PUBLIC KEY-----

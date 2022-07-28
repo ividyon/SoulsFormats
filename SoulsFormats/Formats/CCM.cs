@@ -378,9 +378,9 @@ namespace SoulsFormats
                 bw.WriteInt16(Y2);
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
-                return obj is TexRegion && Equals((TexRegion)obj);
+                return obj is TexRegion region && Equals(region);
             }
 
             public bool Equals(TexRegion other)

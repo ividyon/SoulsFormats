@@ -30,7 +30,7 @@ namespace SoulsFormats
             if (bytes.Length == 0)
                 return false;
 
-            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            BinaryReaderEx br = new(false, bytes);
             var dummy = new TFormat();
             return dummy.Is(SFUtil.GetDecompressedBR(br, out _));
         }
@@ -45,7 +45,7 @@ namespace SoulsFormats
                 if (stream.Length == 0)
                     return false;
 
-                BinaryReaderEx br = new BinaryReaderEx(false, stream);
+                BinaryReaderEx br = new(false, stream);
                 var dummy = new TFormat();
                 return dummy.Is(SFUtil.GetDecompressedBR(br, out _));
             }
@@ -64,8 +64,8 @@ namespace SoulsFormats
         /// </summary>
         public static TFormat Read(byte[] bytes)
         {
-            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
-            TFormat file = new TFormat();
+            BinaryReaderEx br = new(false, bytes);
+            TFormat file = new();
             br = SFUtil.GetDecompressedBR(br, out DCX.Type compression);
             file.Compression = compression;
             file.Read(br);
@@ -77,18 +77,16 @@ namespace SoulsFormats
         /// </summary>
         public static TFormat Read(string path)
         {
-            using (FileStream stream = File.OpenRead(path))
-            {
-                BinaryReaderEx br = new BinaryReaderEx(false, stream);
-                TFormat file = new TFormat();
-                br = SFUtil.GetDecompressedBR(br, out DCX.Type compression);
-                file.Compression = compression;
-                file.Read(br);
-                return file;
-            }
+            using FileStream stream = File.OpenRead(path);
+            BinaryReaderEx br = new(false, stream);
+            TFormat file = new();
+            br = SFUtil.GetDecompressedBR(br, out DCX.Type compression);
+            file.Compression = compression;
+            file.Read(br);
+            return file;
         }
 
-        private static bool IsRead(BinaryReaderEx br, out TFormat file)
+        private static bool IsRead(BinaryReaderEx br, out TFormat? file)
         {
             var test = new TFormat();
             br = SFUtil.GetDecompressedBR(br, out DCX.Type compression);
@@ -110,7 +108,7 @@ namespace SoulsFormats
         /// <summary>
         /// Returns whether the bytes appear to be a file of this type and reads it if so.
         /// </summary>
-        public static bool IsRead(byte[] bytes, out TFormat file)
+        public static bool IsRead(byte[] bytes, out TFormat? file)
         {
             var br = new BinaryReaderEx(false, bytes);
             return IsRead(br, out file);
@@ -119,19 +117,17 @@ namespace SoulsFormats
         /// <summary>
         /// Returns whether the file appears to be a file of this type and reads it if so.
         /// </summary>
-        public static bool IsRead(string path, out TFormat file)
+        public static bool IsRead(string path, out TFormat? file)
         {
-            using (FileStream fs = File.OpenRead(path))
-            {
-                var br = new BinaryReaderEx(false, fs);
-                return IsRead(br, out file);
-            }
+            using FileStream fs = File.OpenRead(path);
+            var br = new BinaryReaderEx(false, fs);
+            return IsRead(br, out file);
         }
 
         /// <summary>
         /// Checks the object for any fatal problems; Write will throw the returned exception on failure.
         /// </summary>
-        public virtual bool Validate(out Exception ex)
+        public virtual bool Validate(out Exception? ex)
         {
             ex = null;
             return true;
@@ -140,7 +136,7 @@ namespace SoulsFormats
         /// <summary>
         /// Returns whether the object is not null, otherwise setting ex to a NullReferenceException with the given message.
         /// </summary>
-        protected static bool ValidateNull(object obj, string message, out Exception ex)
+        protected static bool ValidateNull(object obj, string message, out Exception? ex)
         {
             if (obj == null)
             {
@@ -157,7 +153,7 @@ namespace SoulsFormats
         /// <summary>
         /// Returns whether the index is in range, otherwise setting ex to an IndexOutOfRangeException with the given message.
         /// </summary>
-        protected static bool ValidateIndex(long count, long index, string message, out Exception ex)
+        protected static bool ValidateIndex(long count, long index, string message, out Exception? ex)
         {
             if (index < 0 || index >= count)
             {
@@ -210,10 +206,10 @@ namespace SoulsFormats
         /// </summary>
         public byte[] Write(DCX.Type compression)
         {
-            if (!Validate(out Exception ex))
+            if (!Validate(out Exception? ex) && ex != null)
                 throw ex;
 
-            BinaryWriterEx bw = new BinaryWriterEx(false);
+            BinaryWriterEx bw = new(false);
             Write(bw, compression);
             return bw.FinishBytes();
         }
@@ -231,13 +227,15 @@ namespace SoulsFormats
         /// </summary>
         public void Write(string path, DCX.Type compression)
         {
-            if (!Validate(out Exception ex))
+            if (!Validate(out Exception? ex) && ex != null)
                 throw ex;
 
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            var dir = Path.GetDirectoryName(path);
+            if (dir == null) throw new ArgumentException(path);
+            Directory.CreateDirectory(dir);
             using (FileStream stream = File.Create(path))
             {
-                BinaryWriterEx bw = new BinaryWriterEx(false, stream);
+                BinaryWriterEx bw = new(false, stream);
                 Write(bw, compression);
                 bw.Finish();
             }
