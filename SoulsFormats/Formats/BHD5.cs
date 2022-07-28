@@ -175,12 +175,12 @@ namespace SoulsFormats
             DarkSouls2,
 
             /// <summary>
-            /// Dark Souls 3 on PC.
+            /// Dark Souls 3 and Sekiro on PC.
             /// </summary>
             DarkSouls3,
 
             /// <summary>
-            /// Sekiro on PC.
+            /// Elden Ring on PC.
             /// </summary>
             Sekiro,
 
@@ -275,6 +275,9 @@ namespace SoulsFormats
 
             internal FileHeader(BinaryReaderEx br, Game game, FileNameDictionary? fileNameDictionary, string archiveName)
             {
+                long shaHashOffset = 0;
+                long aesKeyOffset = 0;
+                UnpaddedFileSize = -1;
                 if (game >= Game.EldenRing) {
                     FileNameHash = br.ReadUInt64();
                     PaddedFileSize = br.ReadInt32();
@@ -334,15 +337,16 @@ namespace SoulsFormats
                 }
                 bw.WriteInt64(FileOffset);
 
-                if (game >= Game.DarkSouls2)
-                {
-                    bw.ReserveInt64($"SHAHashOffset{bucketIndex}:{fileIndex}");
-                    bw.ReserveInt64($"AESKeyOffset{bucketIndex}:{fileIndex}");
-                }
+                    if (game >= Game.DarkSouls2)
+                    {
+                        bw.ReserveInt64($"SHAHashOffset{bucketIndex}:{fileIndex}");
+                        bw.ReserveInt64($"AESKeyOffset{bucketIndex}:{fileIndex}");
+                    }
 
-                if (game == Game.DarkSouls3)
-                {
-                    bw.WriteInt64(UnpaddedFileSize);
+                    if (game >= Game.DarkSouls3)
+                    {
+                        bw.WriteInt64(UnpaddedFileSize);
+                    }
                 }
             }
 
