@@ -41,7 +41,7 @@ namespace SoulsFormats
             [DefType.fixstrW] = 0,
         };
 
-        private static readonly Dictionary<DefType, object> variableDefaults = new Dictionary<DefType, object>
+        private static readonly Dictionary<DefType, object?> variableDefaults = new Dictionary<DefType, object?>
         {
             [DefType.s8] = 0,
             [DefType.u8] = 0,
@@ -55,7 +55,7 @@ namespace SoulsFormats
             [DefType.fixstrW] = null,
         };
 
-        public static object GetDefaultDefault(PARAMDEF def, DefType type)
+        public static object? GetDefaultDefault(PARAMDEF? def, DefType type)
         {
             if (def?.VariableEditorValueTypes ?? false)
                 return variableDefaults[type];
@@ -77,7 +77,7 @@ namespace SoulsFormats
             [DefType.fixstrW] = -1,
         };
 
-        private static readonly Dictionary<DefType, object> variableMinimums = new Dictionary<DefType, object>
+        private static readonly Dictionary<DefType, object?> variableMinimums = new Dictionary<DefType, object?>
         {
             [DefType.s8] = (int)sbyte.MinValue,
             [DefType.u8] = (int)byte.MinValue,
@@ -91,7 +91,7 @@ namespace SoulsFormats
             [DefType.fixstrW] = null,
         };
 
-        public static object GetDefaultMinimum(PARAMDEF def, DefType type)
+        public static object? GetDefaultMinimum(PARAMDEF? def, DefType type)
         {
             if (def?.VariableEditorValueTypes ?? false)
                 return variableMinimums[type];
@@ -113,7 +113,7 @@ namespace SoulsFormats
             [DefType.fixstrW] = 1000000000,
         };
 
-        private static readonly Dictionary<DefType, object> variableMaximums = new Dictionary<DefType, object>
+        private static readonly Dictionary<DefType, object?> variableMaximums = new Dictionary<DefType, object?>
         {
             [DefType.s8] = (int)sbyte.MaxValue,
             [DefType.u8] = (int)byte.MaxValue,
@@ -127,7 +127,7 @@ namespace SoulsFormats
             [DefType.fixstrW] = null,
         };
 
-        public static object GetDefaultMaximum(PARAMDEF def, DefType type)
+        public static object? GetDefaultMaximum(PARAMDEF? def, DefType type)
         {
             if (def?.VariableEditorValueTypes ?? false)
                 return variableMaximums[type];
@@ -149,7 +149,7 @@ namespace SoulsFormats
             [DefType.fixstrW] = 1,
         };
 
-        private static readonly Dictionary<DefType, object> variableIncrements = new Dictionary<DefType, object>
+        private static readonly Dictionary<DefType, object?> variableIncrements = new Dictionary<DefType, object?>
         {
             [DefType.s8] = 1,
             [DefType.u8] = 1,
@@ -163,7 +163,7 @@ namespace SoulsFormats
             [DefType.fixstrW] = null,
         };
 
-        public static object GetDefaultIncrement(PARAMDEF def, DefType type)
+        public static object? GetDefaultIncrement(PARAMDEF? def, DefType type)
         {
             if (def?.VariableEditorValueTypes ?? false)
                 return variableIncrements[type];

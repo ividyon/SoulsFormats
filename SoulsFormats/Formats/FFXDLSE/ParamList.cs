@@ -51,19 +51,19 @@ namespace SoulsFormats
             }
 
             #region IXmlSerializable
-            XmlSchema IXmlSerializable.GetSchema() => null;
+            XmlSchema? IXmlSerializable.GetSchema() => null;
 
             void IXmlSerializable.ReadXml(XmlReader reader)
             {
                 reader.MoveToContent();
                 bool empty = reader.IsEmptyElement;
-                Unk04 = int.Parse(reader.GetAttribute(nameof(Unk04)));
+                Unk04 = int.Parse(reader.GetAttribute(nameof(Unk04))!);
                 reader.ReadStartElement();
 
                 if (!empty)
                 {
                     while (reader.IsStartElement(nameof(Param)))
-                        Params.Add((Param)ParamSerializer.Deserialize(reader));
+                        Params.Add((Param)ParamSerializer.Deserialize(reader)!);
                     reader.ReadEndElement();
                 }
             }

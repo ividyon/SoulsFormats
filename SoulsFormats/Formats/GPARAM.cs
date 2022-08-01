@@ -251,7 +251,7 @@ namespace SoulsFormats
         /// <summary>
         /// Returns the first group with a matching name, or null if not found.
         /// </summary>
-        public Group this[string name1] => Groups.Find(group => group.Name1 == name1);
+        public Group? this[string name1] => Groups.Find(group => group.Name1 == name1);
 
         /// <summary>
         /// The game this GPARAM is from.
@@ -427,7 +427,7 @@ namespace SoulsFormats
             /// <summary>
             /// Returns the first param with a matching name, or null if not found.
             /// </summary>
-            public Param this[string name1] => Params.Find(param => param.Name1 == name1);
+            public Param? this[string name1] => Params.Find(param => param.Name1 == name1);
 
             /// <summary>
             /// Returns the long and short names of the group.
@@ -535,7 +535,7 @@ namespace SoulsFormats
             /// <summary>
             /// Unknown; one for each value ID, only present in Sekiro.
             /// </summary>
-            public List<float> UnkFloats;
+            public List<float>? UnkFloats;
 
             /// <summary>
             /// Creates a new Param with no values or unk1s.
@@ -646,7 +646,7 @@ namespace SoulsFormats
                         {
                             ValueIDs.Add(br.ReadInt32());
                             if (game == GPGame.Sekiro)
-                                UnkFloats.Add(br.ReadSingle());
+                                UnkFloats!.Add(br.ReadSingle());
                         }
                     }
                     br.StepOut();
@@ -748,7 +748,7 @@ namespace SoulsFormats
                 {
                     bw.WriteInt32(ValueIDs[i]);
                     if (game == GPGame.Sekiro)
-                        bw.WriteSingle(UnkFloats[i]);
+                        bw.WriteSingle(UnkFloats![i]);
                 }
             }
 

@@ -225,7 +225,7 @@ namespace SoulsFormats
                 bool hasFloatStruct = br.AssertInt32(0, 1) == 1;
 
                 if (platform == TPFPlatform.PS4 || platform == TPFPlatform.Xbone)
-                    Header.DXGIFormat = br.ReadInt32();
+                    Header!.DXGIFormat = br.ReadInt32();
 
                 if (hasFloatStruct)
                     FloatStruct = new FloatStruct(br);

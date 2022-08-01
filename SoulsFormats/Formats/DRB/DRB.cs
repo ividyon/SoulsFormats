@@ -170,7 +170,7 @@ namespace SoulsFormats
         /// <summary>
         /// Returns the element group with the given name, or null if not found.
         /// </summary>
-        public Dlg this[string name] => Dlgs.Find(dlg => dlg.Name == name);
+        public Dlg? this[string name] => Dlgs.Find(dlg => dlg.Name == name);
 
         #region Read/write methods
         private Dictionary<int, string> ReadSTR(BinaryReaderEx br)
@@ -212,7 +212,7 @@ namespace SoulsFormats
                 }
                 else if (shape is Shape.TextBase text && text.TextType == Shape.TxtType.Literal)
                 {
-                    writeString(text.TextLiteral);
+                    writeString(text.TextLiteral!);
                 }
             }
 

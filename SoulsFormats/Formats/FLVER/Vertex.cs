@@ -60,9 +60,9 @@ namespace SoulsFormats
             /// </summary>
             public List<VertexColor> Colors;
 
-            private Queue<Vector3> uvQueue;
-            private Queue<Vector4> tangentQueue;
-            private Queue<VertexColor> colorQueue;
+            private Queue<Vector3>? uvQueue;
+            private Queue<Vector4>? tangentQueue;
+            private Queue<VertexColor>? colorQueue;
 
             /// <summary>
             /// Create a Vertex with null or empty values.
@@ -510,7 +510,7 @@ namespace SoulsFormats
                     }
                     else if (member.Semantic == LayoutSemantic.UV)
                     {
-                        Vector3 uv = uvQueue.Dequeue() * uvFactor;
+                        Vector3 uv = uvQueue!.Dequeue() * uvFactor;
                         if (member.Type == LayoutType.Float2)
                         {
                             bw.WriteSingle(uv.X);
@@ -575,7 +575,7 @@ namespace SoulsFormats
                     }
                     else if (member.Semantic == LayoutSemantic.Tangent)
                     {
-                        Vector4 tangent = tangentQueue.Dequeue();
+                        Vector4 tangent = tangentQueue!.Dequeue();
                         if (member.Type == LayoutType.Float4)
                         {
                             bw.WriteVector4(tangent);
@@ -626,7 +626,7 @@ namespace SoulsFormats
                     }
                     else if (member.Semantic == LayoutSemantic.VertexColor)
                     {
-                        VertexColor color = colorQueue.Dequeue();
+                        VertexColor color = colorQueue!.Dequeue();
                         if (member.Type == LayoutType.Float4)
                         {
                             color.WriteFloatRGBA(bw);

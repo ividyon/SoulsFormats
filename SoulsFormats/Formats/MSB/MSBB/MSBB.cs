@@ -165,7 +165,7 @@ namespace SoulsFormats
                 bw.Pad(8);
 
                 int id = 0;
-                Type currentType = null;
+                Type? currentType = null;
                 for (int i = 0; i < entries.Count; i++)
                 {
                     if (currentType != entries[i].GetType())

@@ -8,7 +8,7 @@ namespace SoulsFormats.XmlExtensions
     {
         private static T ReadT<T>(XmlNode node, string xpath, Func<string, T> parse)
         {
-            XmlNode child = node.SelectSingleNode(xpath);
+            XmlNode? child = node.SelectSingleNode(xpath);
             if (child == null)
                 throw new InvalidDataException($"Missing element: {xpath}");
 
@@ -17,7 +17,7 @@ namespace SoulsFormats.XmlExtensions
 
         private static T ReadT<T>(XmlNode node, string xpath, IFormatProvider provider, Func<string, IFormatProvider, T> parse)
         {
-            XmlNode child = node.SelectSingleNode(xpath);
+            XmlNode? child = node.SelectSingleNode(xpath);
             if (child == null)
                 throw new InvalidDataException($"Missing element: {xpath}");
 
@@ -26,25 +26,25 @@ namespace SoulsFormats.XmlExtensions
 
         private static T? ReadTIfExist<T>(XmlNode node, string xpath, Func<string, T> parse) where T : struct
         {
-            XmlNode child = node.SelectSingleNode(xpath);
+            XmlNode? child = node.SelectSingleNode(xpath);
             return child == null ? null : (T?)parse(child.InnerText);
         }
 
         private static T? ReadTIfExist<T>(XmlNode node, string xpath, IFormatProvider provider, Func<string, IFormatProvider, T> parse) where T : struct
         {
-            XmlNode child = node.SelectSingleNode(xpath);
+            XmlNode? child = node.SelectSingleNode(xpath);
             return child == null ? null : (T?)parse(child.InnerText, provider);
         }
 
         private static T ReadTOrDefault<T>(this XmlNode node, string xpath, T def, Func<string, T> parse)
         {
-            XmlNode child = node.SelectSingleNode(xpath);
+            XmlNode? child = node.SelectSingleNode(xpath);
             return child == null ? def : parse(child.InnerText);
         }
 
         private static T ReadTOrDefault<T>(this XmlNode node, string xpath, T def, IFormatProvider provider, Func<string, IFormatProvider, T> parse)
         {
-            XmlNode child = node.SelectSingleNode(xpath);
+            XmlNode? child = node.SelectSingleNode(xpath);
             return child == null ? def : parse(child.InnerText, provider);
         }
 
@@ -179,22 +179,22 @@ namespace SoulsFormats.XmlExtensions
 
         public static string ReadString(this XmlNode node, string xpath)
         {
-            XmlNode child = node.SelectSingleNode(xpath);
+            XmlNode? child = node.SelectSingleNode(xpath);
             if (child == null)
                 throw new InvalidDataException($"Missing element: {xpath}");
 
             return child.InnerText;
         }
 
-        public static string ReadStringIfExist(this XmlNode node, string xpath)
+        public static string? ReadStringIfExist(this XmlNode node, string xpath)
         {
-            XmlNode child = node.SelectSingleNode(xpath);
+            XmlNode? child = node.SelectSingleNode(xpath);
             return child?.InnerText;
         }
 
         public static string ReadStringOrDefault(this XmlNode node, string xpath, string def)
         {
-            XmlNode child = node.SelectSingleNode(xpath);
+            XmlNode? child = node.SelectSingleNode(xpath);
             return child?.InnerText ?? def;
         }
     }

@@ -291,7 +291,7 @@ namespace SoulsFormats
                 bw.Pad(bw.VarintSize);
 
                 int index = 0;
-                Type type = null;
+                Type? type = null;
                 for (int i = 0; i < entries.Count; i++)
                 {
                     if (type != entries[i].GetType())

@@ -106,10 +106,10 @@ namespace SoulsFormats
                 if (box == null)
                     return;
 
-                WriteBoxTriangleIndices(box.ChildBox1);
-                WriteBoxTriangleIndices(box.ChildBox2);
-                WriteBoxTriangleIndices(box.ChildBox3);
-                WriteBoxTriangleIndices(box.ChildBox4);
+                WriteBoxTriangleIndices(box.ChildBox1!);
+                WriteBoxTriangleIndices(box.ChildBox2!);
+                WriteBoxTriangleIndices(box.ChildBox3!);
+                WriteBoxTriangleIndices(box.ChildBox4!);
 
                 if (box.TriangleIndices.Count == 0)
                 {
@@ -258,7 +258,7 @@ namespace SoulsFormats
             /// <summary>
             /// The four boxes that subdivide this one.
             /// </summary>
-            public Box ChildBox1, ChildBox2, ChildBox3, ChildBox4;
+            public Box? ChildBox1, ChildBox2, ChildBox3, ChildBox4;
 
             internal Box(BinaryReaderEx br)
             {
@@ -280,7 +280,7 @@ namespace SoulsFormats
                 else
                     TriangleIndices = new List<int>(br.GetInt32s(triangleOffset, triangleCount));
 
-                Box ReadBox(int boxOffset)
+                Box? ReadBox(int boxOffset)
                 {
                     if (boxOffset == 0)
                         return null;

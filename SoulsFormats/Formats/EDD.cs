@@ -215,7 +215,7 @@ namespace SoulsFormats
             /// <summary>
             /// Creates a function spec with the given function ID and description, or defaults if not provided.
             /// </summary>
-            public FunctionSpec(int id = 0, string name = null)
+            public FunctionSpec(int id = 0, string name = "")
             {
                 ID = id;
                 Name = name;
@@ -272,7 +272,7 @@ namespace SoulsFormats
             /// <summary>
             /// Creates a command spec with the given command ID and description, or defaults if not provided.
             /// </summary>
-            public CommandSpec(long id = 0, string name = null)
+            public CommandSpec(long id = 0, string name = "")
             {
                 ID = id;
                 Name = name;
@@ -303,7 +303,7 @@ namespace SoulsFormats
             /// <summary>
             /// Creates a command description with the given name, or default if not provided.
             /// </summary>
-            public CommandDesc(string name = null)
+            public CommandDesc(string name = "")
             {
                 Name = name;
             }
@@ -389,7 +389,7 @@ namespace SoulsFormats
             /// <summary>
             /// Creates a new state description with the given id and name, or defaults if not provided.
             /// </summary>
-            public StateDesc(long id = 0, string name = null)
+            public StateDesc(long id = 0, string name = "")
             {
                 ID = id;
                 Name = name;
@@ -465,7 +465,7 @@ namespace SoulsFormats
             /// <summary>
             /// Creates a new machine description with the given id and name, or defaults if not provided.
             /// </summary>
-            public MachineDesc(int id = 0, string name = null)
+            public MachineDesc(int id = 0, string name = "")
             {
                 ID = id;
                 Name = name;

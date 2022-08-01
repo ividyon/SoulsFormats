@@ -21,7 +21,7 @@ namespace SoulsFormats
         public int dwCaps3;
         public int dwCaps4;
         public int dwReserved2;
-        public HEADER_DXT10 header10;
+        public HEADER_DXT10? header10;
 
         public int DataOffset => ddspf.dwFourCC == "DX10" ? 0x94 : 0x80;
 
@@ -89,7 +89,7 @@ namespace SoulsFormats
             bw.WriteInt32(dwReserved2);
 
             if (ddspf.dwFourCC == "DX10")
-                header10.Write(bw);
+                header10!.Write(bw);
 
             bw.WriteBytes(pixelData);
             return bw.FinishBytes();

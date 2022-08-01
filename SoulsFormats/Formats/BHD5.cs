@@ -261,12 +261,12 @@ namespace SoulsFormats
             /// <summary>
             /// Hashing information for this file.
             /// </summary>
-            public SHAHash SHAHash { get; set; }
+            public SHAHash? SHAHash { get; set; }
 
             /// <summary>
             /// Encryption information for this file.
             /// </summary>
-            public AESKey AESKey { get; set; }
+            public AESKey? AESKey { get; set; }
 
             /// <summary>
             /// Creates a FileHeader with default values.
@@ -275,8 +275,8 @@ namespace SoulsFormats
 
             internal FileHeader(BinaryReaderEx br, Game game, FileNameDictionary? fileNameDictionary, string archiveName)
             {
-                long shaHashOffset = 0;
-                long aesKeyOffset = 0;
+                long shaHashOffset;
+                long aesKeyOffset;
                 UnpaddedFileSize = -1;
                 if (game >= Game.EldenRing) {
                     FileNameHash = br.ReadUInt64();
@@ -294,8 +294,8 @@ namespace SoulsFormats
 
                 if (game >= Game.DarkSouls2)
                 {
-                    long shaHashOffset = br.ReadInt64();
-                    long aesKeyOffset = br.ReadInt64();
+                    shaHashOffset = br.ReadInt64();
+                    aesKeyOffset = br.ReadInt64();
 
                     if (shaHashOffset != 0)
                     {
@@ -337,16 +337,15 @@ namespace SoulsFormats
                 }
                 bw.WriteInt64(FileOffset);
 
-                    if (game >= Game.DarkSouls2)
-                    {
-                        bw.ReserveInt64($"SHAHashOffset{bucketIndex}:{fileIndex}");
-                        bw.ReserveInt64($"AESKeyOffset{bucketIndex}:{fileIndex}");
-                    }
+                if (game >= Game.DarkSouls2)
+                {
+                    bw.ReserveInt64($"SHAHashOffset{bucketIndex}:{fileIndex}");
+                    bw.ReserveInt64($"AESKeyOffset{bucketIndex}:{fileIndex}");
+                }
 
-                    if (game >= Game.DarkSouls3)
-                    {
-                        bw.WriteInt64(UnpaddedFileSize);
-                    }
+                if (game >= Game.DarkSouls3)
+                {
+                    bw.WriteInt64(UnpaddedFileSize);
                 }
             }
 
@@ -493,14 +492,11 @@ namespace SoulsFormats
             /// </summary>
             public void Decrypt(byte[] bytes)
             {
-                using (ICryptoTransform decryptor = AES.CreateDecryptor(Key, new byte[16]))
-                {
-                    foreach (Range range in Ranges.Where(r => r.StartOffset != -1 && r.EndOffset != -1 && r.StartOffset != r.EndOffset))
-                    {
-                        int start = (int)range.StartOffset;
-                        int count = (int)(range.EndOffset - range.StartOffset);
-                        decryptor.TransformBlock(bytes, start, count, bytes, start);
-                    }
+                using ICryptoTransform decryptor = AES.CreateDecryptor(Key, new byte[16]);
+                foreach (Range range in Ranges.Where(r => r.StartOffset != -1 && r.EndOffset != -1 && r.StartOffset != r.EndOffset)) {
+                    int start = (int)range.StartOffset;
+                    int count = (int)(range.EndOffset - range.StartOffset);
+                    decryptor.TransformBlock(bytes, start, count, bytes, start);
                 }
             }
         }
@@ -641,7 +637,7 @@ namespace SoulsFormats
                 { "asset", "data1:/asset" },
                 { "expression", "data0:/expression" }
             };
-            
+
             //id -> (root, name)
             private readonly Dictionary<ulong, List<(string, string)>> dict = new();
 
@@ -656,7 +652,7 @@ namespace SoulsFormats
                         var ind = name.IndexOf(':');
                         if (ind == -1) break;
                         var alias = name[..ind];
-                        name = name[(ind+1)..];
+                        name = name[(ind + 1)..];
                         if (PhysicalRoots.Contains(alias)) {
                             root = alias;
                             break;
@@ -689,12 +685,12 @@ namespace SoulsFormats
                         needExtension = true;
                         if (b) filename = eName;
                         else if (!a) filename = null;
-                    } 
-                    else filename = eName;
+                    } else filename = eName;
                 }
                 return filename;
             }
         }
+    
 
         /// <summary>
         /// RSA public keys in PKCS1 PEM format for Elden Ring bhd files

@@ -39,12 +39,12 @@ namespace SoulsFormats
         /// <summary>
         /// Returns the value of the entry with the given name.
         /// </summary>
-        public object this[string name] => Entries.Find(e => e.Name == name).Value;
+        public object? this[string name] => Entries.Find(e => e.Name == name)?.Value;
 
         /// <summary>
         /// Returns the name of the entry with the given value.
         /// </summary>
-        public string this[object value] => Entries.Find(e => e.Value == value).Name;
+        public string? this[object value] => Entries.Find(e => e.Value == value)?.Name;
 
         /// <summary>
         /// Creates an empty TDF.
@@ -85,7 +85,7 @@ namespace SoulsFormats
                 }
 
                 if (elements[0] == "")
-                    Entries.Add(new Entry(null, value));
+                    Entries.Add(new Entry("", value));
                 else
                     Entries.Add(new Entry(elements[0].Trim('"'), value));
             }

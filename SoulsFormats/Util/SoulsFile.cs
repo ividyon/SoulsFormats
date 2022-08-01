@@ -136,7 +136,7 @@ namespace SoulsFormats
         /// <summary>
         /// Returns whether the object is not null, otherwise setting ex to a NullReferenceException with the given message.
         /// </summary>
-        protected static bool ValidateNull(object obj, string message, out Exception? ex)
+        protected static bool ValidateNull(object? obj, string message, out Exception? ex)
         {
             if (obj == null)
             {

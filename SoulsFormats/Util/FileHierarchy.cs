@@ -6,11 +6,17 @@ using System.Threading.Tasks;
 
 namespace SoulsFormats.Util
 {
+    /// <summary>
+    /// The full file system of a Souls game
+    /// </summary>
     public class FileHierarchy
     {
 
     }
 
+    /// <summary>
+    /// A file in a <code>FileHierarchy</code>
+    /// </summary>
     public class FileHierarchyFile
     {
         /// <summary>

@@ -34,8 +34,8 @@ namespace SoulsFormats
                         case PARAMDEF.DefType.s32: this.value = Convert.ToInt32(value); break;
                         case PARAMDEF.DefType.u32: this.value = Convert.ToUInt32(value); break;
                         case PARAMDEF.DefType.f32: this.value = Convert.ToSingle(value); break;
-                        case PARAMDEF.DefType.fixstr: this.value = Convert.ToString(value); break;
-                        case PARAMDEF.DefType.fixstrW: this.value = Convert.ToString(value); break;
+                        case PARAMDEF.DefType.fixstr: this.value = Convert.ToString(value) ?? "null"; break;
+                        case PARAMDEF.DefType.fixstrW: this.value = Convert.ToString(value) ?? "null"; break;
                         case PARAMDEF.DefType.dummy8:
                             if (Def.BitSize == -1)
                                 this.value = (byte[])value;

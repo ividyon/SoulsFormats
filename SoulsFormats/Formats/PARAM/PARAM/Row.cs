@@ -101,7 +101,7 @@ namespace SoulsFormats
                 for (int i = 0; i < paramdef.Fields.Count; i++)
                 {
                     PARAMDEF.Field field = paramdef.Fields[i];
-                    object value = null;
+                    object? value = null;
                     PARAMDEF.DefType type = field.DisplayType;
 
                     if (type == PARAMDEF.DefType.s8)
@@ -171,7 +171,7 @@ namespace SoulsFormats
                             value = (uint)shifted;
                     }
 
-                    cells[i] = new Cell(field, value);
+                    cells[i] = new Cell(field, value!);
                 }
 
                 checkOrphanedBits();

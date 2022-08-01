@@ -123,7 +123,7 @@ namespace SoulsFormats
         /// </summary>
         public void Write(out byte[] bhdBytes, string bdtPath)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(bdtPath));
+            Directory.CreateDirectory(Path.GetDirectoryName(bdtPath) ?? throw new Exception("Directory not found"));
             using (FileStream bdtStream = System.IO.File.Create(bdtPath))
             {
                 BinaryWriterEx bhdWriter = new BinaryWriterEx(false);
@@ -139,15 +139,13 @@ namespace SoulsFormats
         /// </summary>
         public void Write(string bhdPath, out byte[] bdtBytes)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(bhdPath));
-            using (FileStream bhdStream = System.IO.File.Create(bhdPath))
-            {
-                BinaryWriterEx bhdWriter = new BinaryWriterEx(false, bhdStream);
-                BinaryWriterEx bdtWriter = new BinaryWriterEx(false);
-                Write(bhdWriter, bdtWriter);
-                bhdWriter.Finish();
-                bdtBytes = bdtWriter.FinishBytes();
-            }
+            Directory.CreateDirectory(Path.GetDirectoryName(bhdPath) ?? throw new Exception("Directory not found"));
+            using FileStream bhdStream = System.IO.File.Create(bhdPath);
+            BinaryWriterEx bhdWriter = new(false, bhdStream);
+            BinaryWriterEx bdtWriter = new(false);
+            Write(bhdWriter, bdtWriter);
+            bhdWriter.Finish();
+            bdtBytes = bdtWriter.FinishBytes();
         }
 
         /// <summary>
@@ -155,17 +153,14 @@ namespace SoulsFormats
         /// </summary>
         public void Write(string bhdPath, string bdtPath)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(bhdPath));
-            Directory.CreateDirectory(Path.GetDirectoryName(bdtPath));
-            using (FileStream bhdStream = System.IO.File.Create(bhdPath))
-            using (FileStream bdtStream = System.IO.File.Create(bdtPath))
-            {
-                BinaryWriterEx bhdWriter = new BinaryWriterEx(false, bhdStream);
-                BinaryWriterEx bdtWriter = new BinaryWriterEx(false, bdtStream);
-                Write(bhdWriter, bdtWriter);
-                bhdWriter.Finish();
-                bdtWriter.Finish();
-            }
+            Directory.CreateDirectory(Path.GetDirectoryName(bhdPath) ?? throw new Exception("Directory not found"));
+            using FileStream bhdStream = System.IO.File.Create(bhdPath);
+            using FileStream bdtStream = System.IO.File.Create(bdtPath);
+            BinaryWriterEx bhdWriter = new(false, bhdStream);
+            BinaryWriterEx bdtWriter = new(false, bdtStream);
+            Write(bhdWriter, bdtWriter);
+            bhdWriter.Finish();
+            bdtWriter.Finish();
         }
         #endregion
 
@@ -177,7 +172,7 @@ namespace SoulsFormats
         /// <summary>
         /// A timestamp or version number, 8 characters maximum.
         /// </summary>
-        public string Version { get; set; }
+        public string Version { get; set; } = "";
 
         /// <summary>
         /// Indicates the format of the BXF4.

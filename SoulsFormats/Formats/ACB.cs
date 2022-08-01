@@ -16,7 +16,7 @@ namespace SoulsFormats
         /// <summary>
         /// Assets configured by this ACB.
         /// </summary>
-        public List<Asset> Assets { get; set; }
+        public List<Asset> Assets { get; set; } = new List<Asset>();
 
         /// <summary>
         /// Checks whether the data appears to be a file of this format.
@@ -45,7 +45,7 @@ namespace SoulsFormats
             int assetCount = br.ReadInt32();
             br.ReadInt32(); // Offset index offset
 
-            Assets = new List<Asset>(assetCount);
+            Assets.Capacity = assetCount;
             foreach (int assetOffset in br.ReadInt32s(assetCount))
             {
                 br.Position = assetOffset;
@@ -280,7 +280,7 @@ namespace SoulsFormats
                 /// <summary>
                 /// Unknown; may be null.
                 /// </summary>
-                public MemberList Members { get; set; }
+                public MemberList? Members { get; set; }
 
                 /// <summary>
                 /// Distance at which the model becomes invisible.

@@ -97,13 +97,13 @@ namespace SoulsFormats
             private Layout(XmlDocument xml) : base()
             {
                 Enums = new Dictionary<string, Enum>();
-                foreach (XmlNode node in xml.SelectNodes("/layout/enum"))
+                foreach (XmlNode node in xml.SelectNodes("/layout/enum")!)
                 {
-                    string enumName = node.Attributes["name"].InnerText;
+                    string enumName = node.Attributes!["name"]!.InnerText;
                     Enums[enumName] = new Enum(node);
                 }
 
-                foreach (XmlNode node in xml.SelectNodes("/layout/entry"))
+                foreach (XmlNode node in xml.SelectNodes("/layout/entry")!)
                     Add(new Entry(node));
             }
 
@@ -168,24 +168,24 @@ namespace SoulsFormats
                         field.InternalType = entry.Enum;
 
                     if (entry.Type == CellType.s8)
-                        field.Default = (sbyte)entry.Default;
+                        field.Default = (sbyte)entry.Default!;
                     else if (entry.Type == CellType.u8 || entry.Type == CellType.x8)
-                        field.Default = (byte)entry.Default;
+                        field.Default = (byte)entry.Default!;
                     else if (entry.Type == CellType.s16)
-                        field.Default = (short)entry.Default;
+                        field.Default = (short)entry.Default!;
                     else if (entry.Type == CellType.u16 || entry.Type == CellType.x16)
-                        field.Default = (ushort)entry.Default;
+                        field.Default = (ushort)entry.Default!;
                     else if (entry.Type == CellType.s32)
-                        field.Default = (int)entry.Default;
+                        field.Default = (int)entry.Default!;
                     else if (entry.Type == CellType.u32 || entry.Type == CellType.x32)
-                        field.Default = (uint)entry.Default;
+                        field.Default = (uint)entry.Default!;
                     else if (entry.Type == CellType.dummy8 || entry.Type == CellType.fixstr)
                         field.ArrayLength = entry.Size;
                     else if (entry.Type == CellType.fixstrW)
                         field.ArrayLength = entry.Size / 2;
                     else if (entry.Type == CellType.b8 || entry.Type == CellType.b16 || entry.Type == CellType.b32)
                     {
-                        field.Default = (bool)entry.Default ? 1 : 0;
+                        field.Default = (bool)entry.Default! ? 1 : 0;
                         field.BitSize = 1;
                     }
 
@@ -238,7 +238,7 @@ namespace SoulsFormats
             /// <summary>
             /// Convert a param value of the specified type to a string using the given culture.
             /// </summary>
-            public static string ParamValueToString(CellType type, object value, CultureInfo culture)
+            public static string ParamValueToString(CellType type, object? value, CultureInfo culture)
             {
                 if (type == CellType.x8)
                     return $"0x{value:X2}";
@@ -247,15 +247,17 @@ namespace SoulsFormats
                 else if (type == CellType.x32)
                     return $"0x{value:X8}";
                 else if (type == CellType.f32)
-                    return Convert.ToString(value, culture);
+                    return Convert.ToString(value, culture) ?? "CANNOT CONVERT";
+                else if (value == null)
+                    return "null";
                 else
-                    return value.ToString();
+                    return value.ToString() ?? "ToString RETURNED NULL";
             }
 
             /// <summary>
             /// Convert a param value of the specified type to a string using invariant culture.
             /// </summary>
-            public static string ParamValueToString(CellType type, object value)
+            public static string ParamValueToString(CellType type, object? value)
             {
                 return ParamValueToString(type, value, CultureInfo.InvariantCulture);
             }
@@ -310,7 +312,7 @@ namespace SoulsFormats
                 /// <summary>
                 /// The default value to use when creating a new row.
                 /// </summary>
-                public object Default
+                public object? Default
                 {
                     get
                     {
@@ -328,7 +330,7 @@ namespace SoulsFormats
                             def = value;
                     }
                 }
-                private object def;
+                private object? def;
 
                 /// <summary>
                 /// Whether the size can be modified.
@@ -338,12 +340,12 @@ namespace SoulsFormats
                 /// <summary>
                 /// A description of this field's purpose; may be null.
                 /// </summary>
-                public string Description;
+                public string? Description;
 
                 /// <summary>
                 /// If not null, the enum containing possible values for this cell.
                 /// </summary>
-                public string Enum;
+                public string? Enum;
 
                 /// <summary>
                 /// Create a new entry of a fixed-width type.
@@ -368,14 +370,14 @@ namespace SoulsFormats
 
                 internal Entry(XmlNode node)
                 {
-                    Name = node.SelectSingleNode("name").InnerText;
-                    Type = (CellType)System.Enum.Parse(typeof(CellType), node.SelectSingleNode("type").InnerText, true);
+                    Name = node.SelectSingleNode("name")!.InnerText;
+                    Type = (CellType)System.Enum.Parse(typeof(CellType), node.SelectSingleNode("type")!.InnerText, true);
 
                     if (IsVariableSize)
-                        size = int.Parse(node.SelectSingleNode("size").InnerText);
+                        size = int.Parse(node.SelectSingleNode("size")!.InnerText);
 
                     if (Type != CellType.dummy8)
-                        Default = ParseParamValue(Type, node.SelectSingleNode("default").InnerText);
+                        Default = ParseParamValue(Type, node.SelectSingleNode("default")!.InnerText);
 
                     Description = node.SelectSingleNode("description")?.InnerText;
                     Enum = node.SelectSingleNode("enum")?.InnerText;

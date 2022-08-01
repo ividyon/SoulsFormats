@@ -86,8 +86,8 @@ namespace SoulsFormats
             } while (nextSectionOffset != 0);
 
             //DisambiguateNames(entries.Events);
-            MSB.DisambiguateNames(entries.Models);
-            MSB.DisambiguateNames(entries.Parts);
+            MSB.DisambiguateNames(entries.Models ?? new List<Model>());
+            MSB.DisambiguateNames(entries.Parts ?? new List<Part>());
             //DisambiguateNames(entries.Regions);
 
             //Events.GetNames(this, entries);

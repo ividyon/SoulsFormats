@@ -248,7 +248,7 @@ namespace SoulsFormats
         /// <summary>
         /// Returns the first row with the given ID, or null if not found.
         /// </summary>
-        public Row this[int id] => Rows.Find(row => row.ID == id);
+        public Row? this[int id] => Rows.Find(row => row.ID == id);
 
         /// <summary>
         /// First set of flags indicating file format; highly speculative.

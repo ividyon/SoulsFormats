@@ -16,18 +16,18 @@ namespace SoulsFormats
             public static PARAMDEF Deserialize(XmlDocument xml)
             {
                 var def = new PARAMDEF();
-                XmlNode root = xml.SelectSingleNode("PARAMDEF");
+                XmlNode root = xml.SelectSingleNode("PARAMDEF")!;
                 // In the interest of maximum compatibility, we will no longer check the XML version;
                 // just try everything and hope it works.
 
-                def.ParamType = root.SelectSingleNode("ParamType").InnerText;
+                def.ParamType = root.SelectSingleNode("ParamType")!.InnerText;
                 def.DataVersion = root.ReadInt16IfExist("DataVersion") ?? root.ReadInt16("Unk06");
                 def.BigEndian = root.ReadBoolean("BigEndian");
                 def.Unicode = root.ReadBoolean("Unicode");
                 def.FormatVersion = root.ReadInt16IfExist("FormatVersion") ?? root.ReadInt16("Version");
 
                 def.Fields = new List<Field>();
-                foreach (XmlNode node in root.SelectNodes("Fields/Field"))
+                foreach (XmlNode node in root.SelectNodes("Fields/Field")!)
                 {
                     def.Fields.Add(DeserializeField(def, node));
                 }
@@ -69,7 +69,7 @@ namespace SoulsFormats
             private static Field DeserializeField(PARAMDEF def, XmlNode node)
             {
                 var field = new Field();
-                string fieldDef = node.Attributes["Def"].InnerText;
+                string fieldDef = node.Attributes!["Def"]!.InnerText;
                 Match outerMatch = defOuterRx.Match(fieldDef);
                 field.DisplayType = (DefType)Enum.Parse(typeof(DefType), outerMatch.Groups["type"].Value.Trim());
                 if (outerMatch.Groups["default"].Success)
@@ -111,7 +111,7 @@ namespace SoulsFormats
                 return field;
             }
 
-            private static object ParseVariableValue(PARAMDEF def, DefType type, string text)
+            private static object? ParseVariableValue(PARAMDEF def, DefType type, string text)
             {
                 if (def.VariableEditorValueTypes)
                 {
@@ -138,7 +138,7 @@ namespace SoulsFormats
                 }
             }
 
-            private static object ReadVariableValueOrDefault(PARAMDEF def, XmlNode node, DefType type, string xpath, object defaultValue)
+            private static object? ReadVariableValueOrDefault(PARAMDEF def, XmlNode node, DefType type, string xpath, object? defaultValue)
             {
                 if (def.VariableEditorValueTypes)
                 {
@@ -149,8 +149,8 @@ namespace SoulsFormats
                         case DefType.s16:
                         case DefType.u16:
                         case DefType.s32:
-                        case DefType.u32: return node.ReadInt32OrDefault(xpath, (int)defaultValue);
-                        case DefType.f32: return node.ReadSingleOrDefault(xpath, (float)defaultValue, CultureInfo.InvariantCulture);
+                        case DefType.u32: return node.ReadInt32OrDefault(xpath, (int)defaultValue!);
+                        case DefType.f32: return node.ReadSingleOrDefault(xpath, (float)defaultValue!, CultureInfo.InvariantCulture);
                         case DefType.dummy8:
                         case DefType.fixstr:
                         case DefType.fixstrW: return null;
@@ -161,7 +161,7 @@ namespace SoulsFormats
                 }
                 else
                 {
-                    return node.ReadSingleOrDefault(xpath, (float)defaultValue, CultureInfo.InvariantCulture);
+                    return node.ReadSingleOrDefault(xpath, (float)defaultValue!, CultureInfo.InvariantCulture);
                 }
             }
 
@@ -177,22 +177,22 @@ namespace SoulsFormats
                     fieldDef += $" = {VariableValueToString(def, field.DisplayType, field.Default)}";
 
                 xw.WriteAttributeString("Def", fieldDef);
-                xw.WriteDefaultElement("DisplayName", field.DisplayName, field.InternalName);
+                xw.WriteDefaultElement("DisplayName", field.DisplayName!, field.InternalName!);
                 xw.WriteDefaultElement("Enum", field.InternalType, field.DisplayType.ToString());
-                xw.WriteDefaultElement("Description", field.Description, null);
+                xw.WriteDefaultElement("Description", field.Description!, "");
                 xw.WriteDefaultElement("DisplayFormat", field.DisplayFormat, ParamUtil.GetDefaultFormat(field.DisplayType));
                 xw.WriteDefaultElement("EditFlags", field.EditFlags.ToString(), ParamUtil.GetDefaultEditFlags(field.DisplayType).ToString());
-                WriteVariableValue(def, xw, field.DisplayType, "Minimum", field.Minimum, ParamUtil.GetDefaultMinimum(def, field.DisplayType));
-                WriteVariableValue(def, xw, field.DisplayType, "Maximum", field.Maximum, ParamUtil.GetDefaultMaximum(def, field.DisplayType));
-                WriteVariableValue(def, xw, field.DisplayType, "Increment", field.Increment, ParamUtil.GetDefaultIncrement(def, field.DisplayType));
+                WriteVariableValue(def, xw, field.DisplayType, "Minimum", field.Minimum!, ParamUtil.GetDefaultMinimum(def, field.DisplayType)!);
+                WriteVariableValue(def, xw, field.DisplayType, "Maximum", field.Maximum!, ParamUtil.GetDefaultMaximum(def, field.DisplayType)!);
+                WriteVariableValue(def, xw, field.DisplayType, "Increment", field.Increment!, ParamUtil.GetDefaultIncrement(def, field.DisplayType)!);
                 xw.WriteDefaultElement("SortID", field.SortID, 0);
 
-                xw.WriteDefaultElement("UnkB8", field.UnkB8, null);
-                xw.WriteDefaultElement("UnkC0", field.UnkC0, null);
-                xw.WriteDefaultElement("UnkC8", field.UnkC8, null);
+                xw.WriteDefaultElement("UnkB8", field.UnkB8!, "");
+                xw.WriteDefaultElement("UnkC0", field.UnkC0!, "");
+                xw.WriteDefaultElement("UnkC8", field.UnkC8!, "");
             }
 
-            private static string VariableValueToString(PARAMDEF def, DefType type, object value)
+            private static string VariableValueToString(PARAMDEF def, DefType type, object? value)
             {
                 if (def.VariableEditorValueTypes)
                 {

@@ -21,7 +21,7 @@ namespace SoulsFormats
         /// <summary>
         /// Material configs in this file.
         /// </summary>
-        public List<Entry> Entries { get; set; }
+        public List<Entry> Entries { get; set; } = new List<Entry>();
 
         /// <summary>
         /// Deserializes file data from a stream.
@@ -43,7 +43,7 @@ namespace SoulsFormats
 
             long stringsStart = br.Position;
             br.Skip(stringsLength);
-            Entries = new List<Entry>(entryCount);
+            Entries.Capacity = entryCount;
             for (int i = 0; i < entryCount; i++)
                 Entries.Add(new Entry(br, stringsStart));
         }

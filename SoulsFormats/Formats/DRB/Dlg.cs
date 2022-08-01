@@ -107,7 +107,7 @@ namespace SoulsFormats
             /// <summary>
             /// Returns the child element with the given name, or null if not found.
             /// </summary>
-            public Dlgo this[string name] => Dlgos.Find(dlgo => dlgo.Name == name);
+            public Dlgo? this[string name] => Dlgos.Find(dlgo => dlgo.Name == name);
 
             /// <summary>
             /// Returns the name, number of child elements, shape type, and control type of this group.

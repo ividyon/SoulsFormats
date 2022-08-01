@@ -174,7 +174,7 @@ namespace SoulsFormats
             /// <summary>
             /// An optional name for the group. Presence appears to be indicated by the lowest bit of Flags08.
             /// </summary>
-            public string Name { get; set; }
+            public string? Name { get; set; }
 
             /// <summary>
             /// Appears to be flags, highly speculative.
@@ -308,7 +308,7 @@ namespace SoulsFormats
                 if ((Flags08 & 1) != 0)
                 {
                     nameOffset = bw.Position - dataStart;
-                    bw.WriteUTF16(Name, true);
+                    bw.WriteUTF16(Name ?? "", true);
                     if ((bw.Position - dataStart) % 8 != 0)
                         bw.Position += 8 - (bw.Position - dataStart) % 8;
                 }

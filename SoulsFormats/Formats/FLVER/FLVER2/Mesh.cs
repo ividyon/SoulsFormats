@@ -53,7 +53,7 @@ namespace SoulsFormats
             /// </summary>
             public BoundingBoxes BoundingBox { get; set; }
 
-            private int[] faceSetIndices, vertexBufferIndices;
+            private int[]? faceSetIndices, vertexBufferIndices;
 
             /// <summary>
             /// Creates a new Mesh with default values.
@@ -102,7 +102,8 @@ namespace SoulsFormats
 
             internal void TakeFaceSets(Dictionary<int, FaceSet> faceSetDict)
             {
-                FaceSets = new List<FaceSet>(faceSetIndices.Length);
+                if (FaceSets == null) throw new Exception("Cannot take face sets if FaceSets is null");
+                FaceSets = new List<FaceSet>(faceSetIndices!.Length);
                 foreach (int i in faceSetIndices)
                 {
                     if (!faceSetDict.ContainsKey(i))
@@ -116,7 +117,8 @@ namespace SoulsFormats
 
             internal void TakeVertexBuffers(Dictionary<int, VertexBuffer> vertexBufferDict, List<BufferLayout> layouts)
             {
-                VertexBuffers = new List<VertexBuffer>(vertexBufferIndices.Length);
+                if (VertexBuffers == null) throw new Exception("Cannot take vertex buffers if VertexBuffers is null");
+                VertexBuffers = new List<VertexBuffer>(vertexBufferIndices!.Length);
                 foreach (int i in vertexBufferIndices)
                 {
                     if (!vertexBufferDict.ContainsKey(i))

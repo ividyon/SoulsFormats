@@ -53,7 +53,7 @@ namespace SoulsFormats
         /// <summary>
         /// Verifies that there are no null references or invalid indices.
         /// </summary>
-        public override bool Validate(out Exception ex)
+        public override bool Validate(out Exception? ex)
         {
             if (!ValidateNull(Rooms, $"{nameof(Rooms)} may not be null.", out ex))
                 return false;

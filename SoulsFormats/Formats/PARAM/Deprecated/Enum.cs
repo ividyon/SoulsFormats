@@ -28,11 +28,17 @@ namespace SoulsFormats
 
             internal Enum(XmlNode node)
             {
-                Type = (CellType)System.Enum.Parse(typeof(CellType), node.Attributes["type"].InnerText);
-                foreach (XmlNode itemNode in node.SelectNodes("item"))
+                var innerText = node.Attributes?["type"]?.InnerText;
+                if (innerText == null) return;
+                Type = (CellType)System.Enum.Parse(typeof(CellType), innerText);
+                var iter = node.SelectNodes("item");
+                if (iter == null) return;
+                foreach (XmlNode itemNode in iter)
                 {
-                    string itemName = itemNode.Attributes["name"].InnerText;
-                    object itemValue = Layout.ParseParamValue(Type, itemNode.Attributes["value"].InnerText);
+                    string? itemName = itemNode.Attributes?["name"]?.InnerText;
+                    string? itemValueS = itemNode.Attributes?["value"]?.InnerText;
+                    if (itemName == null || itemValueS == null) return;
+                    object itemValue = Layout.ParseParamValue(Type, itemValueS);
                     Add(new Item(itemName, itemValue));
                 }
             }

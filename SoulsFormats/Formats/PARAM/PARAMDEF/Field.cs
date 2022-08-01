@@ -108,22 +108,22 @@ namespace SoulsFormats
             /// <summary>
             /// Default value for new rows.
             /// </summary>
-            public object Default { get; set; }
+            public object? Default { get; set; }
 
             /// <summary>
             /// Minimum valid value.
             /// </summary>
-            public object Minimum { get; set; }
+            public object? Minimum { get; set; }
 
             /// <summary>
             /// Maximum valid value.
             /// </summary>
-            public object Maximum { get; set; }
+            public object? Maximum { get; set; }
 
             /// <summary>
             /// Amount of increase or decrease per step when scrolling in the editor.
             /// </summary>
-            public object Increment { get; set; }
+            public object? Increment { get; set; }
 
             /// <summary>
             /// Flags determining behavior of the field in the editor.
@@ -138,7 +138,7 @@ namespace SoulsFormats
             /// <summary>
             /// Optional description of the field; may be null.
             /// </summary>
-            public string Description { get; set; }
+            public string? Description { get; set; }
 
             /// <summary>
             /// Type of the value in the engine; may be an enum type.
@@ -148,7 +148,7 @@ namespace SoulsFormats
             /// <summary>
             /// Name of the value in the engine; not present before version 102.
             /// </summary>
-            public string InternalName { get; set; }
+            public string? InternalName { get; set; }
 
             /// <summary>
             /// Number of bits used by a bitfield; only supported for unsigned types, -1 when not used.
@@ -163,17 +163,17 @@ namespace SoulsFormats
             /// <summary>
             /// Unknown; appears to be an identifier. May be null, only supported in versions >= 200, only present in version 202 so far.
             /// </summary>
-            public string UnkB8 { get; set; }
+            public string? UnkB8 { get; set; }
 
             /// <summary>
             /// Unknown; appears to be a param type. May be null, only supported in versions >= 200, only present in version 202 so far.
             /// </summary>
-            public string UnkC0 { get; set; }
+            public string? UnkC0 { get; set; }
 
             /// <summary>
             /// Unknown; appears to be a display string. May be null, only supported in versions >= 200, only present in version 202 so far.
             /// </summary>
-            public string UnkC8 { get; set; }
+            public string? UnkC8 { get; set; }
 
             private static readonly Regex arrayLengthRx = new Regex(@"^\s*(?<name>.+?)\s*\[\s*(?<length>\d+)\s*\]\s*$");
             private static readonly Regex bitSizeRx = new Regex(@"^\s*(?<name>.+?)\s*\:\s*(?<size>\d+)\s*$");
@@ -186,7 +186,7 @@ namespace SoulsFormats
             /// <summary>
             /// Creates a Field with the given type, name, and appropriate default values.
             /// </summary>
-            public Field(PARAMDEF def, DefType displayType, string internalName)
+            public Field(PARAMDEF? def, DefType displayType, string internalName)
             {
                 DisplayName = internalName;
                 DisplayType = displayType;
@@ -300,9 +300,9 @@ namespace SoulsFormats
 
                 if (def.FormatVersion >= 203)
                 {
-                    object readVariableValue()
+                    object? readVariableValue()
                     {
-                        object value;
+                        object? value;
                         switch (DisplayType)
                         {
                             case DefType.s8:
@@ -368,7 +368,7 @@ namespace SoulsFormats
                 if (def.FormatVersion >= 202 || def.FormatVersion >= 106 && def.FormatVersion < 200)
                     bw.ReserveVarint($"InternalNameOffset{index}");
                 else if (def.FormatVersion >= 102)
-                    bw.WriteFixStr(MakeInternalName(), 0x20, padding);
+                    bw.WriteFixStr(MakeInternalName() ?? "", 0x20, padding);
 
                 if (def.FormatVersion >= 104)
                     bw.WriteInt32(SortID);
@@ -389,7 +389,7 @@ namespace SoulsFormats
 
                 if (def.FormatVersion >= 203)
                 {
-                    void writeVariableValue(object value)
+                    void writeVariableValue(object? value)
                     {
                         switch (DisplayType)
                         {
@@ -442,12 +442,12 @@ namespace SoulsFormats
                     bw.WriteASCII(InternalType, true);
 
                     bw.FillVarint($"InternalNameOffset{index}", bw.Position);
-                    bw.WriteASCII(MakeInternalName(), true);
+                    bw.WriteASCII(MakeInternalName() ?? "", true);
                 }
 
                 if (def.FormatVersion >= 200)
                 {
-                    long writeSharedStringMaybe(string str, bool unicode)
+                    long writeSharedStringMaybe(string? str, bool unicode)
                     {
                         if (str == null)
                             return 0;
@@ -469,7 +469,7 @@ namespace SoulsFormats
                 }
             }
 
-            private string MakeInternalName()
+            private string? MakeInternalName()
             {
                 // This formatting is almost 100% accurate in DS1, less so in BB, and a complete crapshoot in DS3
                 // C'est la vie.
