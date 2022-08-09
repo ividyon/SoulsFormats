@@ -67,6 +67,11 @@ namespace SoulsFormats.Formats.Havok
         /// </summary>
         public string? attribute;
 
+        public override string ToString()
+        {
+            return $"{name}{{{byteSize}}}";
+        }
+
     }
     /// <summary>
     /// A template variable for a Havok type

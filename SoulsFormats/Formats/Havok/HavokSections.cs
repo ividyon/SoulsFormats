@@ -14,11 +14,11 @@ namespace SoulsFormats.Formats.Havok
         /// <summary>
         /// unknown
         /// </summary>
-        public ushort Unk00;
+        public uint Unk00;
         /// <summary>
         /// Length of this section in bytes
         /// </summary>
-        public ushort Length;
+        public int Length;
         /// <summary>
         /// The id or tag for this section
         /// </summary>
@@ -30,8 +30,9 @@ namespace SoulsFormats.Formats.Havok
         protected void ReadHeader(BinaryReaderEx br)
         {
             br.BigEndian = true;
-            Unk00 = br.ReadUInt16();
-            Length = br.ReadUInt16();
+            uint length = br.ReadUInt32();
+            Unk00 = length & 0xf0000000;
+            Length = (int)(length & 0x0fffffff);
             br.BigEndian = false;
             br.AssertASCII(new string[] { Id });
         }
@@ -39,7 +40,7 @@ namespace SoulsFormats.Formats.Havok
         /// <summary>
         /// Reads this section
         /// </summary>
-        public abstract void Read(BinaryReaderEx br, HavokCompendium f);
+        public abstract void Read(BinaryReaderEx br, HavokFile f);
     }
     
     /// <summary>
@@ -64,7 +65,7 @@ namespace SoulsFormats.Formats.Havok
         /// <summary>
         /// Reads this section
         /// </summary>
-        public override void Read(BinaryReaderEx br, HavokCompendium f)
+        public override void Read(BinaryReaderEx br, HavokFile f)
         {
             ReadHeader(br);
             tcid.Read(br, f);
@@ -73,15 +74,70 @@ namespace SoulsFormats.Formats.Havok
     }
 
     /// <summary>
-    /// Represents the TCID section
-    /// Contains IDs for an unknown purpose
+    /// Represents the TAG0 section, used to start a compendium file
     /// </summary>
-    public class HavokSectionTCID : HavokSection
+    public class HavokSectionTAG0 : HavokSection
     {
         /// <summary>
         /// The id or tag for this section
         /// </summary>
-        public override string Id => "TCID";
+        public override string Id => "TAG0";
+
+        /// <summary>
+        /// The DATA section inside this section
+        /// </summary>
+        public HavokSectionSDKV sdkv = new();
+        /// <summary>
+        /// The DATA section inside this section
+        /// </summary>
+        public HavokSectionDATA data = new();
+        /// <summary>
+        /// The TYPE section inside this section
+        /// </summary>
+        public HavokSectionTYPE? type = null;
+        /// <summary>
+        /// The TCRF section inside this section
+        /// </summary>
+        public HavokSectionTCRF? tcrf = null;
+        /// <summary>
+        /// The INDX section inside this section
+        /// </summary>
+        public HavokSectionINDX indx = new();
+        /// <summary>
+        /// The PTCH section inside this section
+        /// </summary>
+        public HavokSectionPTCH ptch = new();
+
+        /// <summary>
+        /// Reads this section
+        /// </summary>
+        public override void Read(BinaryReaderEx br, HavokFile f)
+        {
+            ReadHeader(br);
+            sdkv.Read(br, f);
+            data.Read(br, f);
+            var nextTag = br.GetASCII(br.Position + 4, 4);
+            if (nextTag == "TYPE") {
+                type = new HavokSectionTYPE();
+                type.Read(br, f);
+            } else {
+                tcrf = new HavokSectionTCRF();
+                tcrf.Read(br, f);
+            }
+            indx.Read(br, f);
+            ptch.Read(br, f);
+        }
+    }
+
+    /// <summary>
+    /// Represents the SDKV section
+    /// </summary>
+    public class HavokSectionSDKV : HavokSection
+    {
+        /// <summary>
+        /// The id or tag for this section
+        /// </summary>
+        public override string Id => "SDKV";
 
         /// <summary>
         /// Unknown
@@ -91,10 +147,196 @@ namespace SoulsFormats.Formats.Havok
         /// <summary>
         /// Reads this section
         /// </summary>
-        public override void Read(BinaryReaderEx br, HavokCompendium f)
+        public override void Read(BinaryReaderEx br, HavokFile f)
         {
             ReadHeader(br);
             Unk08 = br.ReadBytes(Length - 8);
+        }
+
+    }
+
+    /// <summary>
+    /// Represents the Data section
+    /// Contains serialized objects
+    /// </summary>
+    public class HavokSectionDATA : HavokSection
+    {
+        /// <summary>
+        /// The id or tag for this section
+        /// </summary>
+        public override string Id => "DATA";
+
+        /// <summary>
+        /// Unknown
+        /// </summary>
+        public Byte[] Unk08;
+
+        /// <summary>
+        /// Reads this section
+        /// </summary>
+        public override void Read(BinaryReaderEx br, HavokFile f)
+        {
+            ReadHeader(br);
+            Unk08 = br.ReadBytes(Length - 8);
+            f.ObjectData = Unk08;
+        }
+
+    }
+
+    /// <summary>
+    /// Represents the INDX section
+    /// Unknown purpose
+    /// </summary>
+    public class HavokSectionINDX : HavokSection
+    {
+        /// <summary>
+        /// The id or tag for this section
+        /// </summary>
+        public override string Id => "INDX";
+
+        /// <summary>
+        /// The ITEM section inside this section
+        /// </summary>
+        public HavokSectionITEM item = new();
+
+        /// <summary>
+        /// Reads this section
+        /// </summary>
+        public override void Read(BinaryReaderEx br, HavokFile f)
+        {
+            ReadHeader(br);
+            item.Read(br, f);
+        }
+
+    }
+
+    /// <summary>
+    /// Represents the ITEM section
+    /// Unknown purpose
+    /// </summary>
+    public class HavokSectionITEM : HavokSection
+    {
+        /// <summary>
+        /// The id or tag for this section
+        /// </summary>
+        public override string Id => "ITEM";
+
+        /// <summary>
+        /// The objects listed in this section
+        /// </summary>
+        public List<HavokTagObject> objects = new();
+
+        /// <summary>
+        /// Reads this section
+        /// </summary>
+        public override void Read(BinaryReaderEx br, HavokFile f)
+        {
+            var start = br.Position;
+            ReadHeader(br);
+            var end = start + Length;
+            f.Objects = objects;
+            while (br.Position < end) {
+                uint flags = br.ReadUInt32();
+                int typeInd = (int)(flags & 0xffffff);
+                HavokTagType tagType = f.TagTypes[typeInd];
+                var dataOffset = br.ReadInt32();
+                var unk = br.ReadInt32();
+                byte[] data;
+                //TODO: figure out how to tell it's a string/array
+                if (flags == 0x2000002c) {
+                    data = f.ObjectData![dataOffset..(dataOffset + unk)];
+                } else {
+                    data = f.ObjectData![dataOffset..(dataOffset + tagType.byteSize)];
+                }
+                objects.Add(new HavokTagObject(tagType, data, flags, unk));
+            }
+        }
+
+    }
+
+    /// <summary>
+    /// Represents the PTCH section
+    /// Unknown purpose
+    /// </summary>
+    public class HavokSectionPTCH : HavokSection
+    {
+        /// <summary>
+        /// The id or tag for this section
+        /// </summary>
+        public override string Id => "PTCH";
+
+        /// <summary>
+        /// Unknown
+        /// </summary>
+        public Byte[] Unk08;
+
+        /// <summary>
+        /// Reads this section
+        /// </summary>
+        public override void Read(BinaryReaderEx br, HavokFile f)
+        {
+            ReadHeader(br);
+            Unk08 = br.ReadBytes(Length - 8);
+        }
+
+    }
+
+    /// <summary>
+    /// Represents the TCID section
+    /// Contains IDs
+    /// </summary>
+    public class HavokSectionTCID : HavokSection
+    {
+        /// <summary>
+        /// The id or tag for this section
+        /// </summary>
+        public override string Id => "TCID";
+
+        /// <summary>
+        /// A list of ids to identify this compendium file
+        /// </summary>
+        public List<ulong> ids = new();
+
+        /// <summary>
+        /// Reads this section
+        /// </summary>
+        public override void Read(BinaryReaderEx br, HavokFile f)
+        {
+            var start = br.Position;
+            ReadHeader(br);
+            var end = start + Length;
+            while (br.Position < end) ids.Add(br.ReadUInt64());
+        }
+
+    }
+
+    /// <summary>
+    /// Represents the TCRF section
+    /// Contains a compendium ID
+    /// </summary>
+    public class HavokSectionTCRF : HavokSection
+    {
+        /// <summary>
+        /// The id or tag for this section
+        /// </summary>
+        public override string Id => "TCRF";
+
+        /// <summary>
+        /// A compendium ID
+        /// </summary>
+        public ulong id;
+
+        /// <summary>
+        /// Reads this section
+        /// </summary>
+        public override void Read(BinaryReaderEx br, HavokFile f)
+        {
+            var start = br.Position;
+            ReadHeader(br);
+            var end = start + Length;
+            id = br.ReadUInt64();
+            //there may be padding/other values, needs more investigation
+            br.Position = end;
         }
 
     }
@@ -113,28 +355,32 @@ namespace SoulsFormats.Formats.Havok
         /// <summary>
         /// The TPTR section inside this section
         /// </summary>
-        HavokSectionTPTR tptr = new();
+        public HavokSectionTPTR tptr = new();
         /// <summary>
         /// The TSTR section inside this section
         /// </summary>
-        HavokSectionTSTR tstr = new();
+        public HavokSectionTSTR tstr = new();
         /// <summary>
         /// The TNA1 section inside this section
         /// </summary>
-        HavokSectionTNA1 tna1 = new();
+        public HavokSectionTNA1 tna1 = new();
         /// <summary>
         /// The FSTR section inside this section
         /// </summary>
-        HavokSectionFSTR fstr = new();
+        public HavokSectionFSTR fstr = new();
         /// <summary>
         /// The TBDY section inside this section
         /// </summary>
-        HavokSectionTBDY tbdy = new();
+        public HavokSectionTBDY tbdy = new();
+        /// <summary>
+        /// The THSH section inside this section
+        /// </summary>
+        public HavokSectionTHSH thsh;
 
         /// <summary>
         /// Reads this section
         /// </summary>
-        public override void Read(BinaryReaderEx br, HavokCompendium f)
+        public override void Read(BinaryReaderEx br, HavokFile f)
         {
             ReadHeader(br);
             tptr.Read(br, f);
@@ -142,6 +388,12 @@ namespace SoulsFormats.Formats.Havok
             tna1.Read(br, f);
             fstr.Read(br, f);
             tbdy.Read(br, f);
+            var nextTag = br.GetASCII(br.Position + 4, 4);
+            if (nextTag == "THSH") {
+                thsh = new HavokSectionTHSH();
+                thsh.Read(br, f);
+            }
+            new HavokSectionTPAD().Read(br, f);
         }
 
     }
@@ -165,10 +417,37 @@ namespace SoulsFormats.Formats.Havok
         /// <summary>
         /// Reads this section
         /// </summary>
-        public override void Read(BinaryReaderEx br, HavokCompendium f)
+        public override void Read(BinaryReaderEx br, HavokFile f)
         {
             ReadHeader(br);
             Unk08 = br.ReadBytes(Length - 8);
+        }
+
+    }
+
+    /// <summary>
+    /// Represents the TPAD section
+    /// Used to pad the length of a TYPE section
+    /// </summary>
+    public class HavokSectionTPAD : HavokSection
+    {
+        /// <summary>
+        /// The id or tag for this section
+        /// </summary>
+        public override string Id => "TPAD";
+
+        /// <summary>
+        /// Padding
+        /// </summary>
+        public Byte[] Padding;
+
+        /// <summary>
+        /// Reads this section
+        /// </summary>
+        public override void Read(BinaryReaderEx br, HavokFile f)
+        {
+            ReadHeader(br);
+            Padding = br.ReadBytes(Length - 8);
         }
 
     }
@@ -192,7 +471,7 @@ namespace SoulsFormats.Formats.Havok
         /// <summary>
         /// Reads this section
         /// </summary>
-        public override void Read(BinaryReaderEx br, HavokCompendium f)
+        public override void Read(BinaryReaderEx br, HavokFile f)
         {
             this.strings = f.TagTypeStrings;
             ReadHeader(br);
@@ -219,7 +498,7 @@ namespace SoulsFormats.Formats.Havok
         /// <summary>
         /// Reads this section
         /// </summary>
-        public override void Read(BinaryReaderEx br, HavokCompendium f)
+        public override void Read(BinaryReaderEx br, HavokFile f)
         {
             var start = br.Position;
             ReadHeader(br);
@@ -268,7 +547,7 @@ namespace SoulsFormats.Formats.Havok
         /// <summary>
         /// Reads this section
         /// </summary>
-        public override void Read(BinaryReaderEx br, HavokCompendium f)
+        public override void Read(BinaryReaderEx br, HavokFile f)
         {
             this.strings = f.TagFieldStrings;
             ReadHeader(br);
@@ -295,7 +574,7 @@ namespace SoulsFormats.Formats.Havok
         /// <summary>
         /// Reads this section
         /// </summary>
-        public override void Read(BinaryReaderEx br, HavokCompendium f)
+        public override void Read(BinaryReaderEx br, HavokFile f)
         {
             var start = br.Position;
             ReadHeader(br);
@@ -348,10 +627,37 @@ namespace SoulsFormats.Formats.Havok
                 }
                 if ((type.flags & (uint)HavokTagFlags.Attribute) != 0) {
                     var nameInd = (int)br.ReadHavokVarint();
-                    type.attribute = f.TagFieldStrings[nameInd];
+                    //TODO: NOT the right array, need to read from ASTR not FSTR
+                    type.attribute = f.TagFieldStrings[nameInd]; 
                 }
             }
 
+        }
+
+    }
+
+    /// <summary>
+    /// Represents the THSH section
+    /// </summary>
+    public class HavokSectionTHSH : HavokSection
+    {
+        /// <summary>
+        /// The id or tag for this section
+        /// </summary>
+        public override string Id => "THSH";
+
+        /// <summary>
+        /// Unknown
+        /// </summary>
+        public Byte[] Unk08;
+
+        /// <summary>
+        /// Reads this section
+        /// </summary>
+        public override void Read(BinaryReaderEx br, HavokFile f)
+        {
+            ReadHeader(br);
+            Unk08 = br.ReadBytes(Length - 8);
         }
 
     }

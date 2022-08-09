@@ -270,6 +270,7 @@ namespace SoulsFormats
         /// </summary>
         public byte[] ReadBytes(int count)
         {
+            if (count == 0) return Array.Empty<byte>();
             byte[] result = br.ReadBytes(count);
             if (result.Length != count)
                 throw new EndOfStreamException("Remaining size of stream was smaller than requested number of bytes.");
