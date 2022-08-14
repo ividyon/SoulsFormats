@@ -30,7 +30,14 @@ namespace SoulsFormats.Formats.Havok
         /// </summary>
         public HavokFile? Compendium { get; set; }
 
-        public List<HavokTagObject>? Objects { get; set; }
+        public List<HavokTagObject> ObjectInfos { get; set; } = new();
+
+        public List<object> Objects { get; set; } = new();
+
+        /// <summary>
+        /// Maps from object pointers to actual objects to compensate for arrays in the data
+        /// </summary>
+        public List<int> ObjectPtrs { get; set; } = new();
 
         public byte[]? ObjectData { get; set; }
 

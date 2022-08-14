@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SoulsFormats.Formats.Havok.HavokTypes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -234,21 +235,36 @@ namespace SoulsFormats.Formats.Havok
             var start = br.Position;
             ReadHeader(br);
             var end = start + Length;
-            f.Objects = objects;
+            f.ObjectInfos = objects;
+            int objInd = 0;
+            objects.Add(new HavokTagObject(f.TagTypes[0], Array.Empty<byte>(), 0, 0));
+            f.Objects.Add(new object());
             while (br.Position < end) {
+                f.ObjectPtrs.Add(objInd);
+                objInd++;
                 uint flags = br.ReadUInt32();
                 int typeInd = (int)(flags & 0xffffff);
                 HavokTagType tagType = f.TagTypes[typeInd];
                 var dataOffset = br.ReadInt32();
-                var unk = br.ReadInt32();
-                byte[] data;
-                //TODO: figure out how to tell it's a string/array
-                if (flags == 0x2000002c) {
-                    data = f.ObjectData![dataOffset..(dataOffset + unk)];
-                } else {
-                    data = f.ObjectData![dataOffset..(dataOffset + tagType.byteSize)];
+                var num = br.ReadInt32();
+                for (int i = 0; i < num; i++) {
+                    if (i != 0) objInd++;
+                    var dataEnd = dataOffset + tagType.byteSize;
+                    var data = f.ObjectData![dataOffset..dataEnd];
+                    var obj = new HavokTagObject(tagType, data, flags, num) {
+                        dataStart = dataOffset,
+                        dataEnd = dataEnd
+                    };
+                    objects.Add(obj);
+                    f.Objects.Add(HavokTypeRegistry.TryInstantiateObject(obj));
+                    dataOffset = dataEnd;
                 }
-                objects.Add(new HavokTagObject(tagType, data, flags, unk));
+            }
+            foreach (var o in f.Objects) {
+                var o2 = o as HavokTypeBase;
+                if (o2 != null) {
+                    o2.Read(f);
+                }
             }
         }
 
@@ -337,6 +353,7 @@ namespace SoulsFormats.Formats.Havok
             id = br.ReadUInt64();
             //there may be padding/other values, needs more investigation
             br.Position = end;
+            if (f.Compendium == null) throw new Exception("Attempted to load an HKX file without a compendium");
         }
 
     }
@@ -596,6 +613,8 @@ namespace SoulsFormats.Formats.Havok
                 if ((type.flags & (int)HavokTagFlags.Version) != 0) {
                     type.version = (int)br.ReadHavokVarint();
                 }
+                if (type.name == "hkUint16")
+                    Console.WriteLine();
                 if ((type.flags & (int)HavokTagFlags.ByteSize) != 0) {
                     type.byteSize = (int)br.ReadHavokVarint();
                     type.alignment = (int)br.ReadHavokVarint();
@@ -605,7 +624,6 @@ namespace SoulsFormats.Formats.Havok
                 }
                 if ((type.flags & (int)HavokTagFlags.Members) != 0) {
                     var numMembers = (int)br.ReadHavokVarint() & 0xffff;
-                    type.members = new List<HavokTagMember>(numMembers);
                     for (int i = 0; i < numMembers; i++) {
                         var member = new HavokTagMember();
                         var nameInd = (int)br.ReadHavokVarint();
@@ -631,7 +649,16 @@ namespace SoulsFormats.Formats.Havok
                     type.attribute = f.TagFieldStrings[nameInd]; 
                 }
             }
-
+            foreach (var type in f.TagTypes) {
+                if (type.parent == null) continue;
+                if ((type.flags & (int)HavokTagFlags.ByteSize) == 0) {
+                    type.byteSize = type.parent.byteSize;
+                    type.alignment = type.parent.alignment;
+                }
+                var tmp = type.members;
+                type.members = new List<HavokTagMember>(type.parent.members);
+                type.members.AddRange(tmp);
+            }
         }
 
     }

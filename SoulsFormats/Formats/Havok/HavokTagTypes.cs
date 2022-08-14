@@ -23,7 +23,7 @@ namespace SoulsFormats.Formats.Havok
         /// <summary>
         /// The superclass of this type
         /// </summary>
-        public HavokTagType? parent;
+        public HavokTagType parent;
         /// <summary>
         /// Flags telling a few things about this type
         /// Not necessary except for serialization
@@ -57,7 +57,7 @@ namespace SoulsFormats.Formats.Havok
         /// <summary>
         /// A list of members/fields
         /// </summary>
-        public List<HavokTagMember>? members;
+        public List<HavokTagMember> members = new();
         /// <summary>
         /// A list of interfaces this type implements
         /// </summary>
@@ -133,6 +133,10 @@ namespace SoulsFormats.Formats.Havok
         /// The type of this member
         /// </summary>
         public HavokTagType type;
+        public override string ToString()
+        {
+            return $"{name}: {type.ToString()}";
+        }
     }
     /// <summary>
     /// Values for flags to help deserialization
