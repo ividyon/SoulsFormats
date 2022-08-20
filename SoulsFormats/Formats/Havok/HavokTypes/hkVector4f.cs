@@ -70,14 +70,18 @@ namespace SoulsFormats.Formats.Havok.HavokTypes
         public hkVector4f max;
         public hkAabb(BinaryReaderEx r, HavokFile f) : base(null)
         {
-            min = hkVector4f.Read(r, f);
-            max = hkVector4f.Read(r, f);
+            var data2 = r.ReadBytes(32);
+            var r2 = new BinaryReaderEx(false, data2);
+            min = hkVector4f.FromFloats(r2.ReadSingle(), r2.ReadSingle(), r2.ReadSingle(), r2.ReadSingle());
+            max = hkVector4f.FromFloats(r2.ReadSingle(), r2.ReadSingle(), r2.ReadSingle(), r2.ReadSingle());
         }
         public hkAabb(HavokTagObject o) : base(o) { }
         public override void Read(byte[] data, BinaryReaderEx r, HavokFile f)
         {
-            min = hkVector4f.Read(r, f);
-            max = hkVector4f.Read(r, f);
+            var data2 = r.ReadBytes(32);
+            var r2 = new BinaryReaderEx(false, data2);
+            min = hkVector4f.FromFloats(r2.ReadSingle(), r2.ReadSingle(), r2.ReadSingle(), r2.ReadSingle());
+            max = hkVector4f.FromFloats(r2.ReadSingle(), r2.ReadSingle(), r2.ReadSingle(), r2.ReadSingle());
         }
     }
 

@@ -10,7 +10,6 @@ namespace SoulsFormats.Formats.Havok.HavokTypes
     public class hkcdDefaultStaticMeshTree : hkcdStaticMeshTree.Base
     {
         public uint[] packedVertices;
-        public hkVector4f[] unpackedVertices;
         public ulong[] sharedVertices;
         public PrimitiveDataRun[] primitiveDataRuns;
 
@@ -136,17 +135,21 @@ namespace SoulsFormats.Formats.Havok.HavokTypes
 
             public (hkVector4f, hkVector4f, hkVector4f, hkVector4f)[] UnpackPrimitives(hkcdDefaultStaticMeshTree mesh)
             {
-                var ans = new (hkVector4f, hkVector4f, hkVector4f, hkVector4f)[numPrimitives];
+                var ans = new List<(hkVector4f, hkVector4f, hkVector4f, hkVector4f)>(numPrimitives);
                 for (int primInd = 0; primInd < numPrimitives; primInd++) {
                     var prim = mesh.primitives[primInd + firstPrimitiveIndex];
-                    ans[primInd] = (
-                        unpackVector(mesh, prim.indices.Item1),
-                        unpackVector(mesh, prim.indices.Item2),
-                        unpackVector(mesh, prim.indices.Item3),
-                        unpackVector(mesh, prim.indices.Item4)
-                    );
+                    var a = unpackVector(mesh, prim.indices.Item1);
+                    var b = unpackVector(mesh, prim.indices.Item2);
+                    var c = unpackVector(mesh, prim.indices.Item3);
+                    var d = unpackVector(mesh, prim.indices.Item4);
+                    ans.Add((a, b, c, d));
+                    if (prim.indices.Item3 != prim.indices.Item4) {
+                        ans.Add((b, c, d, a));
+                        ans.Add((a, c, d, b));
+                        ans.Add((a, b, d, c));
+                    }
                 }
-                return ans;
+                return ans.ToArray();
             }
             private hkVector4f unpackVector(hkcdDefaultStaticMeshTree mesh, int ind)
             {
@@ -161,23 +164,20 @@ namespace SoulsFormats.Formats.Havok.HavokTypes
                 } else {
                     //4.768374e-07, 4.768374e-07, 2.384186e-07, 1.0
                     var d = mesh.domain;
-                    var xmul = (d.max.x - d.min.x) * 4.768374e-07f;
-                    var ymul = (d.max.y - d.min.y) * 4.768374e-07f;
-                    var zmul = (d.max.z - d.min.z) * 2.384186e-07f;
-                    //var wmul = (d.max.w - d.min.w);
+                    var xmul = (d.max.x - d.min.x) / 0x1fffff;
+                    var ymul = (d.max.y - d.min.y) / 0x1fffff;
+                    var zmul = (d.max.z - d.min.z) / (0x3fffff);
                     var xadd = d.min.x;
                     var yadd = d.min.y;
                     var zadd = d.min.z;
                     var wadd = d.min.w;
                     var ind2 = mesh.sharedVerticesIndex[(int)firstSharedVertexIndex - (int)numPackedVertices + ind];
                     var packed = mesh.sharedVertices[page * 0x10000 + ind2];
-                    ulong tmp = (ulong)packed & 0x1fffff | (((ulong)packed >> 0x2a) << 0x20);
-                    var x = (float)((double)(tmp & 0x1fffff) * xmul + xadd);
+                    var x = (float)((packed & 0x1fffff) * xmul + xadd);
                     var y = (float)((packed >> 0x15) & 0x1fffff) * ymul + yadd;
-                    var z = (float)((tmp >> 0x20) & 0xffffffff) * zmul + zadd;
+                    var z = (float)((packed >> 0x2a) & 0x3fffff) * zmul + zadd;
                     var w = wadd;
-                    //return hkVector4f.FromFloats((float)x, (float)y, (float)z, w);
-                    return hkVector4f.FromFloats(0, 0, 0, 0);
+                    return hkVector4f.FromFloats((float)x, (float)y, (float)z, w);
                 }
             }
         }

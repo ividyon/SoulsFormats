@@ -69,7 +69,7 @@ namespace SoulsFormats.Formats.Havok.HavokTypes
 
         public override void Read(byte[] data, BinaryReaderEx r, HavokFile f)
         {
-            value = r.ReadUInt32();
+            value = r.ReadUInt64();
         }
     }
 }
