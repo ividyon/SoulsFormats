@@ -102,7 +102,7 @@ namespace SoulsFormats
 
             internal void TakeFaceSets(Dictionary<int, FaceSet> faceSetDict)
             {
-                if (FaceSets == null) throw new Exception("Cannot take face sets if FaceSets is null");
+                if (faceSetIndices == null) throw new Exception("Cannot take face sets if FaceSets is null");
                 FaceSets = new List<FaceSet>(faceSetIndices!.Length);
                 foreach (int i in faceSetIndices)
                 {
@@ -117,7 +117,7 @@ namespace SoulsFormats
 
             internal void TakeVertexBuffers(Dictionary<int, VertexBuffer> vertexBufferDict, List<BufferLayout> layouts)
             {
-                if (VertexBuffers == null) throw new Exception("Cannot take vertex buffers if VertexBuffers is null");
+                if (vertexBufferIndices == null) throw new Exception("Cannot take vertex buffers if VertexBuffers is null");
                 VertexBuffers = new List<VertexBuffer>(vertexBufferIndices!.Length);
                 foreach (int i in vertexBufferIndices)
                 {

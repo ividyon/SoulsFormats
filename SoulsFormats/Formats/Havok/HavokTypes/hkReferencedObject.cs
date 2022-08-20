@@ -16,10 +16,13 @@ namespace SoulsFormats.Formats.Havok.HavokTypes
 
         public override void Read(byte[] data, BinaryReaderEx r, HavokFile f)
         {
+            //vtable
+            r.Skip(8);
             var propBagPtr = r.ReadUInt64();
             if (propBagPtr != 0) throw new Exception("Property bag was not null in hkReferencedObject");
             memSizeAndFlags = r.ReadUInt16();
             refCount = r.ReadUInt16();
+            r.Skip(4);
         }
     }
 

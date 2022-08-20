@@ -669,6 +669,21 @@ namespace SoulsFormats
         }
         #endregion
 
+        #region Half
+
+        /// <summary>
+        /// Reads a two-byte floating point number.
+        /// </summary>
+        public Half ReadHalf()
+        {
+            if (BigEndian)
+                return BitConverter.ToHalf(ReadReversedBytes(2));
+            else
+                return BitConverter.ToHalf(ReadBytes(2));
+        }
+
+        #endregion Half
+
         #region Single
         /// <summary>
         /// Reads a four-byte floating point number.

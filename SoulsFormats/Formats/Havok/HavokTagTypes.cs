@@ -12,6 +12,7 @@ namespace SoulsFormats.Formats.Havok
     /// </summary>
     public class HavokTagType
     {
+        private bool copiedParent = false;
         /// <summary>
         /// The type's name
         /// </summary>
@@ -70,6 +71,88 @@ namespace SoulsFormats.Formats.Havok
         public override string ToString()
         {
             return $"{name}{{{byteSize}}}";
+        }
+
+        internal void EnsureCopiedParent()
+        {
+            if (copiedParent) return;
+            copiedParent = true;
+            if (parent == null) return;
+            parent.EnsureCopiedParent();
+            var tmp = new List<HavokTagMember>(parent.members);
+            tmp.AddRange(members);
+            members = tmp;
+        }
+        private static Dictionary<string, string> primitives = new() {
+            { "bool", "bool" },
+            { "hkBool", "bool" },
+            { "hkUint8", "byte" },
+            { "hkInt8", "sbyte" },
+            { "char", "char" },
+            { "signed char", "char" },
+            { "unsigned char", "uchar" },
+            { "hkUint16", "ushort" },
+            { "unsigned short", "ushort" },
+            { "hkInt16", "short" },
+            { "short", "short" },
+            { "hkUint32", "uint" },
+            { "unsigned int", "uint" },
+            { "hkInt32", "int" },
+            { "int", "int" },
+            { "hkUint64", "ulonglong" },
+            { "unsigned long long", "ulonglong" },
+            { "unsigned long", "ulong" },
+            { "hkInt64", "longlong" },
+            { "long long", "longlong" },
+            { "long", "long" },
+            { "char*", "char*" },
+            { "const char*", "const char*" },
+            { "hkUintReal", "hkUintReal" },
+            { "void", "void" },
+            { "hkReal", "float" },
+            { "float", "float" },
+            { "hkUFloat8", "ufbyte" },
+            { "hkHalf16", "half" },
+
+        };
+        public string ToCppRepr()
+        {
+            var sb = new StringBuilder();
+            var parentStr = parent == null ? "" : $" : {parent.name}";
+            sb.AppendLine($"public class {name}{parentStr} {{ //{byteSize} bytes");
+            int currPosBytes = 0;
+            foreach (var m in members) {
+                var diffPos = m.byteOffset - currPosBytes;
+                if (diffPos != 0) {
+                    sb.AppendLine($"    byte[{diffPos}] paddingBytes; // {currPosBytes}-{currPosBytes+diffPos} ({diffPos})");
+                    currPosBytes += diffPos;
+                }
+                if (primitives.TryGetValue(m.type.name, out string typeName)) {
+                    sb.Append($"    {typeName} {m.name};");
+                } else {
+                    if (m.type.name == "T*") {
+                        //typeName = m.type.templates[0].valueType.name+"*";
+                        sb.Append($"    {m.type.templates[0].valueType.name}* {m.name};");
+                    } else {
+                        string generics = "";
+                        if (m.type.templates.Count != 0) {
+                            generics = "<";
+                            for (int i = 0; i < m.type.templates.Count; i++) {
+                                var t = m.type.templates[i];
+                                var val = t.valueType == null ? t.valueInt.ToString() : t.valueType.ToString();
+                                generics += $"{t.name} = {val}";
+                                if (i < m.type.templates.Count - 1) generics += ",";
+                            }
+                            generics += ">";
+                        }
+                        sb.Append($"    {m.type.name}{generics} {m.name};");
+                    }
+                }
+                sb.AppendLine($" //{currPosBytes}-{currPosBytes + m.type.byteSize} ({m.type.byteSize})");
+                currPosBytes += m.type.byteSize;
+            }
+            sb.AppendLine("}");
+            return sb.ToString();
         }
 
     }

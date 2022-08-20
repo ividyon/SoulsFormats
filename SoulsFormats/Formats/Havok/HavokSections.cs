@@ -256,7 +256,7 @@ namespace SoulsFormats.Formats.Havok
                         dataEnd = dataEnd
                     };
                     objects.Add(obj);
-                    f.Objects.Add(HavokTypeRegistry.TryInstantiateObject(obj));
+                    f.Objects.Add(HavokTypeRegistry.TryInstantiateObject(obj, f));
                     dataOffset = dataEnd;
                 }
             }
@@ -655,9 +655,7 @@ namespace SoulsFormats.Formats.Havok
                     type.byteSize = type.parent.byteSize;
                     type.alignment = type.parent.alignment;
                 }
-                var tmp = type.members;
-                type.members = new List<HavokTagMember>(type.parent.members);
-                type.members.AddRange(tmp);
+                type.EnsureCopiedParent();
             }
         }
 

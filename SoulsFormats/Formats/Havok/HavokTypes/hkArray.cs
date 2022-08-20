@@ -30,4 +30,20 @@ namespace SoulsFormats.Formats.Havok.HavokTypes
             }
         }
     }
+
+    public struct hkFreeListArray<T>
+    {
+        T[] arr;
+        int m_size;
+        int m_capacityAndFlags;
+        int firstFree;
+        public hkFreeListArray(BinaryReaderEx r, HavokFile f)
+        {
+            m_size = r.GetInt32(8);
+            m_capacityAndFlags = r.GetInt32(12);
+            arr = HavokTypeBase.ReadArr<T>(r, f);
+            firstFree = r.ReadInt32();
+            r.Skip(4);
+        }
+    }
 }
