@@ -74,6 +74,8 @@ namespace SoulsFormats
             /// </summary>
             public List<VertexColor> Colors;
 
+
+
             private Queue<Vector3> uvQueue;
             private Queue<Vector4> tangentQueue;
             private Queue<VertexColor> colorQueue;
@@ -260,7 +262,7 @@ namespace SoulsFormats
                         }
                         else
                             throw new NotImplementedException($"Read not implemented for {member.Type} {member.Semantic}.");
-
+                            
                         UsesBoneIndices = true;
                     }
                     else if (member.Semantic == LayoutSemantic.Normal)
@@ -390,7 +392,7 @@ namespace SoulsFormats
                         else if (member.Type == LayoutType.Short4toFloat4A)
                         {
                             //Tangents.Add(ReadShortNormXYZW(br));
-                            AddTangent(ReadByteNormXYZW(br));
+                            AddTangent(ReadShortNormXYZW(br));
                         }
                         else if (member.Type == LayoutType.Byte4E)
                         {

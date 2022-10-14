@@ -115,11 +115,11 @@ namespace SoulsFormats
                     if (unk04 == 0x10000 && unk10 == 0x24 && unk30 == 9 && unk38 == 0)
                         type = Type.DCX_DFLT_10000_24_9;
                     else if (unk04 == 0x10000 && unk10 == 0x44 && unk30 == 9 && unk38 == 0)
-                        type = Type.DCX_DFLT_10000_44_9;
+                            type = Type.DCX_DFLT_10000_44_9;
                     else if (unk04 == 0x11000 && unk10 == 0x44 && unk30 == 8 && unk38 == 0)
-                        type = Type.DCX_DFLT_11000_44_8;
+                                type = Type.DCX_DFLT_11000_44_8;
                     else if (unk04 == 0x11000 && unk10 == 0x44 && unk30 == 9 && unk38 == 0)
-                        type = Type.DCX_DFLT_11000_44_9;
+                                type = Type.DCX_DFLT_11000_44_9;
                     else if (unk04 == 0x11000 && unk10 == 0x44 && unk30 == 9 && unk38 == 15)
                         type = Type.DCX_DFLT_11000_44_9_15;
                 }
