@@ -535,6 +535,7 @@ namespace SoulsFormats
             /// <summary>
             /// If specified, the region is only active when the part is loaded.
             /// </summary>
+            [MSBReference(ReferenceType = typeof(Part))]
             public string ActivationPartName { get; set; }
             private int ActivationPartIndex;
 
@@ -937,6 +938,7 @@ namespace SoulsFormats
                 /// <summary>
                 /// References to other regions used to build a composite shape.
                 /// </summary>
+                [MSBReference(ReferenceType = typeof(Region))]
                 public string[] ChildRegionNames { get; private set; }
                 private int[] ChildRegionIndices;
 
@@ -1050,6 +1052,7 @@ namespace SoulsFormats
                 /// <summary>
                 /// Reference to a WindArea region.
                 /// </summary>
+                [MSBReference(ReferenceType = typeof(Region))]
                 public string WindAreaName { get; set; }
                 private int WindAreaIndex;
 
@@ -1170,6 +1173,7 @@ namespace SoulsFormats
                 /// <summary>
                 /// NpcParam ID to use when rendering a character with the message.
                 /// </summary>
+                [MSBParamReference(ParamName = "NPCParam")]
                 public int NPCParamID { get; set; }
 
                 /// <summary>
@@ -1180,6 +1184,7 @@ namespace SoulsFormats
                 /// <summary>
                 /// Unknown.
                 /// </summary>
+                [MSBParamReference(ParamName = "CharaInitParam")]
                 public int CharaInitParamID { get; set; }
 
                 /// <summary>
