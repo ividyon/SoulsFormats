@@ -97,7 +97,7 @@ namespace SoulsFormats
             int unk3Count = br.ReadInt32();
             offsets.Unk3 = br.ReadInt32();
             offsets.Unk3ValueIDs = br.ReadInt32();
-            br.AssertInt32(0);
+            br.AssertInt32(0, 0x40D00000);
 
             if (Game == GPGame.DarkSouls3 || Game == GPGame.Sekiro)
             {
