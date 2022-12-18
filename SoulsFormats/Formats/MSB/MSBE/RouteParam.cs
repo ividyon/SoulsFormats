@@ -10,7 +10,7 @@ namespace SoulsFormats
         {
             MufflingPortalLink = 3,
             MufflingBoxLink = 4,
-            Other = 0xFFFFFFFF
+            Other = 0xFFFFFFFF,
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace SoulsFormats
             /// <summary>
             /// Creates an empty RouteParam with the default version.
             /// </summary>
-            public RouteParam() : base(35, "ROUTE_PARAM_ST")
+            public RouteParam() : base(73, "ROUTE_PARAM_ST")
             {
                 MufflingPortalLinks = new List<Route.MufflingPortalLink>();
                 MufflingBoxLinks = new List<Route.MufflingBoxLink>();
@@ -66,7 +66,7 @@ namespace SoulsFormats
             public override List<Route> GetEntries()
             {
                 return SFUtil.ConcatAll<Route>(
-                    MufflingPortalLinks, MufflingBoxLinks);
+                    MufflingPortalLinks, MufflingBoxLinks, Others);
             }
 
             internal override Route ReadEntry(BinaryReaderEx br)
@@ -97,6 +97,11 @@ namespace SoulsFormats
             private protected abstract RouteType Type { get; }
 
             /// <summary>
+            /// "Other" routes, which are likely unused, seem to have no logic to their ID, so we store it
+            /// </summary>
+            internal int OtherID { get; set; }
+
+            /// <summary>
             /// Unknown.
             /// </summary>
             public int Unk08 { get; set; }
@@ -109,6 +114,7 @@ namespace SoulsFormats
             private protected Route(string name)
             {
                 Name = name;
+                OtherID = -1;
             }
 
             /// <summary>
@@ -126,7 +132,7 @@ namespace SoulsFormats
                 Unk08 = br.ReadInt32();
                 Unk0C = br.ReadInt32();
                 br.AssertUInt32((uint)Type);
-                br.ReadInt32(); // ID
+                OtherID = br.ReadInt32(); // ID
                 br.AssertPattern(0x68, 0x00);
 
                 if (nameOffset == 0)
@@ -143,7 +149,10 @@ namespace SoulsFormats
                 bw.WriteInt32(Unk08);
                 bw.WriteInt32(Unk0C);
                 bw.WriteUInt32((uint)Type);
-                bw.WriteInt32(id);
+                if (OtherID != -1)
+                    bw.WriteInt32(OtherID);
+                else
+                    bw.WriteInt32(id);
                 bw.WritePattern(0x68, 0x00);
 
                 bw.FillInt64("NameOffset", bw.Position - start);
@@ -197,9 +206,9 @@ namespace SoulsFormats
                 private protected override RouteType Type => RouteType.Other;
 
                 /// <summary>
-                /// Creates a MufflingBoxLink with default values.
+                /// Creates a Other with default values.
                 /// </summary>
-                public Other() : base("") { }
+                public Other() : base("X-X") { }
 
                 internal Other(BinaryReaderEx br) : base(br) { }
             }

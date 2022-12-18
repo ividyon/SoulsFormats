@@ -5,7 +5,7 @@ using System.IO;
 namespace SoulsFormats
 {
     /// <summary>
-    /// A map layout file used in Elden Ring. Extension: .msb
+    /// A map layout file used in Sekiro. Extension: .msb
     /// </summary>
     public partial class MSBE : SoulsFile<MSBE>, IMsb
     {
@@ -44,17 +44,7 @@ namespace SoulsFormats
         public EmptyParam Layers { get; set; }
 
         /// <summary>
-        /// Sets bone positions for fixed objects; not used in Sekiro.
-        /// </summary>
-        public EmptyParam PartsPoses { get; set; }
-
-        /// <summary>
-        /// Bone names for the parts pose param; not used in Sekiro.
-        /// </summary>
-        public EmptyParam BoneNames { get; set; }
-
-        /// <summary>
-        /// Creates an MSBE with nothing in it.
+        /// Creates an MSBS with nothing in it.
         /// </summary>
         public MSBE()
         {
@@ -64,8 +54,6 @@ namespace SoulsFormats
             Routes = new RouteParam();
             Parts = new PartsParam();
             Layers = new EmptyParam(0x23, "LAYER_PARAM_ST");
-            PartsPoses = new EmptyParam(0, "MAPSTUDIO_PARTS_POSE_ST");
-            BoneNames = new EmptyParam(0, "MAPSTUDIO_BONE_NAME_STRING");
         }
 
         /// <summary>
@@ -97,15 +85,10 @@ namespace SoulsFormats
             entries.Regions = Regions.Read(br);
             Routes = new RouteParam();
             entries.Routes = Routes.Read(br);
-            Layers = new EmptyParam(0x23, "LAYER_PARAM_ST");
+            Layers = new EmptyParam(0x49, "LAYER_PARAM_ST");
             Layers.Read(br);
             Parts = new PartsParam();
             entries.Parts = Parts.Read(br);
-            PartsPoses = new EmptyParam(0, "MAPSTUDIO_PARTS_POSE_ST");
-            if (br.Position != 0) PartsPoses.Read(br);
-            BoneNames = new EmptyParam(0, "MAPSTUDIO_BONE_NAME_STRING");
-
-            if (br.Position != 0) BoneNames.Read(br);
 
             if (br.Position != 0)
                 throw new InvalidDataException("The next param offset of the final param should be 0, but it wasn't.");
@@ -113,6 +96,7 @@ namespace SoulsFormats
             MSB.DisambiguateNames(entries.Models);
             MSB.DisambiguateNames(entries.Regions);
             MSB.DisambiguateNames(entries.Parts);
+            MSB.DisambiguateNames(entries.Events);
 
             foreach (Event evt in entries.Events)
                 evt.GetNames(this, entries);
@@ -157,10 +141,6 @@ namespace SoulsFormats
             Layers.Write(bw, Layers.GetEntries());
             bw.FillInt64("NextParamOffset", bw.Position);
             Parts.Write(bw, entries.Parts);
-            bw.FillInt64("NextParamOffset", bw.Position);
-            PartsPoses.Write(bw, Layers.GetEntries());
-            bw.FillInt64("NextParamOffset", bw.Position);
-            BoneNames.Write(bw, Layers.GetEntries());
             bw.FillInt64("NextParamOffset", 0);
         }
 
@@ -229,7 +209,7 @@ namespace SoulsFormats
                 bw.Pad(8);
 
                 int id = 0;
-                Type? type = null;
+                Type type = null;
                 for (int i = 0; i < entries.Count; i++)
                 {
                     if (type != entries[i].GetType())

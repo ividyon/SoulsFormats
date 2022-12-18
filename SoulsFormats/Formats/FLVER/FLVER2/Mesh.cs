@@ -45,12 +45,16 @@ namespace SoulsFormats
             /// <summary>
             /// Vertices in this mesh.
             /// </summary>
-            public List<FLVER.Vertex> Vertices { get; set; }
+            [HideProperty]
+            public FLVER.Vertex[] Vertices { get; set; }
             IReadOnlyList<FLVER.Vertex> IFlverMesh.Vertices => Vertices;
+
+            public int VertexCount { get; set; }
 
             /// <summary>
             /// Optional bounding box struct; may be null.
             /// </summary>
+            [HideProperty]
             public BoundingBoxes BoundingBox { get; set; }
 
             private int[]? faceSetIndices, vertexBufferIndices;
@@ -64,10 +68,10 @@ namespace SoulsFormats
                 BoneIndices = new List<int>();
                 FaceSets = new List<FaceSet>();
                 VertexBuffers = new List<VertexBuffer>();
-                Vertices = new List<FLVER.Vertex>();
+                Vertices = null;
             }
 
-            internal Mesh(BinaryReaderEx br, FLVERHeader header)
+            internal Mesh(BinaryReaderEx br, FLVER2Header header)
             {
                 Dynamic = br.AssertByte(0, 1);
                 br.AssertByte(0);
@@ -157,7 +161,7 @@ namespace SoulsFormats
                 }
             }
 
-            internal void ReadVertices(BinaryReaderEx br, int dataOffset, List<BufferLayout> layouts, FLVERHeader header)
+            internal void ReadVertices(BinaryReaderEx br, int dataOffset, List<BufferLayout> layouts, FLVER2Header header, FlverCache cache)
             {
                 if (VertexBuffers.Count == 0) return;
                 var layoutMembers = layouts.SelectMany(l => l);
@@ -165,13 +169,26 @@ namespace SoulsFormats
                 int tanCap = layoutMembers.Where(m => m.Semantic == FLVER.LayoutSemantic.Tangent).Count();
                 int colorCap = layoutMembers.Where(m => m.Semantic == FLVER.LayoutSemantic.VertexColor).Count();
 
-                int vertexCount = VertexBuffers[0].VertexCount;
-                Vertices = new List<FLVER.Vertex>(vertexCount);
-                for (int i = 0; i < vertexCount; i++)
-                    Vertices.Add(new FLVER.Vertex(uvCap, tanCap, colorCap));
+                VertexCount = VertexBuffers[0].VertexCount;
+                Vertices = cache.GetCachedVertexArray(VertexCount);
+                if (Vertices == null)
+                {
+                    Vertices = new FLVER.Vertex[VertexCount];
+                    for (int i = 0; i < VertexCount; i++)
+                        Vertices[i] = new FLVER.Vertex(uvCap, tanCap, colorCap);
+                    cache.CacheVertexArray(Vertices);
+                }
+                else
+                {
+                    for (int i = 0; i < Vertices.Length; i++)
+                    {
+                        Vertices[i].UVCount = 0;
+                        Vertices[i].TangentCount = 0;
+                    }
+                }
 
                 foreach (VertexBuffer buffer in VertexBuffers)
-                    buffer.ReadBuffer(br, layouts, Vertices, dataOffset, header);
+                    buffer.ReadBuffer(br, layouts, Vertices, VertexCount, dataOffset, header);
             }
 
             internal void Write(BinaryWriterEx bw, int index)
@@ -194,7 +211,7 @@ namespace SoulsFormats
                 bw.ReserveInt32($"MeshVertexBufferIndices{index}");
             }
 
-            internal void WriteBoundingBox(BinaryWriterEx bw, int index, FLVERHeader header)
+            internal void WriteBoundingBox(BinaryWriterEx bw, int index, FLVER2Header header)
             {
                 if (BoundingBox == null)
                 {
@@ -235,7 +252,7 @@ namespace SoulsFormats
                 else
                 {
                     FaceSet faceSet = FaceSets.Find(fs => fs.Flags == fsFlags) ?? FaceSets[0];
-                    List<int> indices = faceSet.Triangulate(Vertices.Count < ushort.MaxValue);
+                    List<int> indices = faceSet.Triangulate(VertexCount < ushort.MaxValue);
                     var vertices = new List<FLVER.Vertex[]>(indices.Count);
                     for (int i = 0; i < indices.Count - 2; i += 3)
                     {
@@ -277,7 +294,7 @@ namespace SoulsFormats
                     Max = new Vector3(float.MaxValue);
                 }
 
-                internal BoundingBoxes(BinaryReaderEx br, FLVERHeader header)
+                internal BoundingBoxes(BinaryReaderEx br, FLVER2Header header)
                 {
                     Min = br.ReadVector3();
                     Max = br.ReadVector3();
@@ -285,7 +302,7 @@ namespace SoulsFormats
                         Unk = br.ReadVector3();
                 }
 
-                internal void Write(BinaryWriterEx bw, FLVERHeader header)
+                internal void Write(BinaryWriterEx bw, FLVER2Header header)
                 {
                     bw.WriteVector3(Min);
                     bw.WriteVector3(Max);

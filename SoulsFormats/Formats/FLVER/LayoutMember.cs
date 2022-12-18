@@ -63,6 +63,9 @@ namespace SoulsFormats
                         case LayoutType.Float4:
                             return 16;
 
+                        case LayoutType.Unknown:
+                            return 4;
+
                         default:
                             throw new NotImplementedException($"No size defined for buffer layout type: {Type}");
                     }

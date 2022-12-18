@@ -13,7 +13,7 @@ namespace SoulsFormats
             Enemy = 2,
             Player = 4,
             Collision = 5,
-            Object = 0xA,
+            Asset = 10,
         }
 
         /// <summary>
@@ -25,11 +25,6 @@ namespace SoulsFormats
             /// Models for fixed terrain and scenery.
             /// </summary>
             public List<Model.MapPiece> MapPieces { get; set; }
-
-            /// <summary>
-            /// Models for dynamic props.
-            /// </summary>
-            public List<Model.Object> Objects { get; set; }
 
             /// <summary>
             /// Models for non-player entities.
@@ -47,15 +42,20 @@ namespace SoulsFormats
             public List<Model.Collision> Collisions { get; set; }
 
             /// <summary>
+            /// Models for assets.
+            /// </summary>
+            public List<Model.Asset> Assets { get; set; }
+
+            /// <summary>
             /// Creates an empty ModelParam with the default version.
             /// </summary>
-            public ModelParam() : base(35, "MODEL_PARAM_ST")
+            public ModelParam() : base(73, "MODEL_PARAM_ST")
             {
                 MapPieces = new List<Model.MapPiece>();
-                Objects = new List<Model.Object>();
                 Enemies = new List<Model.Enemy>();
                 Players = new List<Model.Player>();
                 Collisions = new List<Model.Collision>();
+                Assets = new List<Model.Asset>();
             }
 
             /// <summary>
@@ -63,12 +63,13 @@ namespace SoulsFormats
             /// </summary>
             public Model Add(Model model)
             {
-                switch (model) {
+                switch (model)
+                {
                     case Model.MapPiece m: MapPieces.Add(m); break;
-                    case Model.Object m: Objects.Add(m); break;
                     case Model.Enemy m: Enemies.Add(m); break;
                     case Model.Player m: Players.Add(m); break;
                     case Model.Collision m: Collisions.Add(m); break;
+                    case Model.Asset m: Assets.Add(m); break;
 
                     default:
                         throw new ArgumentException($"Unrecognized type {model.GetType()}.", nameof(model));
@@ -83,7 +84,7 @@ namespace SoulsFormats
             public override List<Model> GetEntries()
             {
                 return SFUtil.ConcatAll<Model>(
-                    MapPieces, Objects, Enemies, Players, Collisions);
+                    MapPieces, Enemies, Players, Collisions, Assets);
             }
             IReadOnlyList<IMsbModel> IMsbParam<IMsbModel>.GetEntries() => GetEntries();
 
@@ -95,9 +96,6 @@ namespace SoulsFormats
                     case ModelType.MapPiece:
                         return MapPieces.EchoAdd(new Model.MapPiece(br));
 
-                    case ModelType.Object:
-                        return Objects.EchoAdd(new Model.Object(br));
-
                     case ModelType.Enemy:
                         return Enemies.EchoAdd(new Model.Enemy(br));
 
@@ -106,6 +104,9 @@ namespace SoulsFormats
 
                     case ModelType.Collision:
                         return Collisions.EchoAdd(new Model.Collision(br));
+
+                    case ModelType.Asset:
+                        return Assets.EchoAdd(new Model.Asset(br));
 
                     default:
                         throw new NotImplementedException($"Unimplemented model type: {type}");
@@ -235,102 +236,27 @@ namespace SoulsFormats
                 private protected override bool HasTypeData => false;
 
                 /// <summary>
-                /// Unknown.
-                /// </summary>
-                public bool UnkT00 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public bool UnkT01 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public bool UnkT02 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float UnkT04 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float UnkT08 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float UnkT0C { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float UnkT10 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float UnkT14 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float UnkT18 { get; set; }
-
-                /// <summary>
                 /// Creates a MapPiece with default values.
                 /// </summary>
                 public MapPiece() : base("mXXXXXX") { }
 
                 internal MapPiece(BinaryReaderEx br) : base(br) { }
-
-                private protected override void ReadTypeData(BinaryReaderEx br)
-                {
-                    UnkT00 = br.ReadBoolean();
-                    UnkT01 = br.ReadBoolean();
-                    UnkT02 = br.ReadBoolean();
-                    br.AssertByte(0);
-                    UnkT04 = br.ReadSingle();
-                    UnkT08 = br.ReadSingle();
-                    UnkT0C = br.ReadSingle();
-                    UnkT10 = br.ReadSingle();
-                    UnkT14 = br.ReadSingle();
-                    UnkT18 = br.ReadSingle();
-                    br.AssertInt32(0);
-                }
-
-                private protected override void WriteTypeData(BinaryWriterEx bw)
-                {
-                    bw.WriteBoolean(UnkT00);
-                    bw.WriteBoolean(UnkT01);
-                    bw.WriteBoolean(UnkT02);
-                    bw.WriteByte(0);
-                    bw.WriteSingle(UnkT04);
-                    bw.WriteSingle(UnkT08);
-                    bw.WriteSingle(UnkT0C);
-                    bw.WriteSingle(UnkT10);
-                    bw.WriteSingle(UnkT14);
-                    bw.WriteSingle(UnkT18);
-                    bw.WriteInt32(0);
-                }
             }
 
             /// <summary>
-            /// A model for a dynamic prop.
+            /// A model for a dynamic prop. ER successor to obj
             /// </summary>
-            public class Object : Model
+            public class Asset : Model
             {
-                private protected override ModelType Type => ModelType.Object;
+                private protected override ModelType Type => ModelType.Asset;
                 private protected override bool HasTypeData => false;
 
                 /// <summary>
                 /// Creates an Object with default values.
                 /// </summary>
-                public Object() : base("oXXXXXX") { }
+                public Asset() : base("AEGxxx_xxx") { }
 
-                internal Object(BinaryReaderEx br) : base(br) { }
+                internal Asset(BinaryReaderEx br) : base(br) { }
             }
 
             /// <summary>

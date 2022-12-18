@@ -9,6 +9,7 @@
     <Company>JKAnderson</Company>
     <Authors>Joseph Anderson</Authors>
     <PackageProjectUrl>https://github.com/JKAnderson/SoulsFormats</PackageProjectUrl>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
