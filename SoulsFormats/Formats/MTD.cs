@@ -167,12 +167,12 @@ namespace SoulsFormats
             /// <summary>
             /// The value itself.
             /// </summary>
-            public object Value { get; set; }
+            public object? Value { get; set; }
 
             /// <summary>
             /// Creates a new Param with the specified values.
             /// </summary>
-            public Param(string name, ParamType type, object value = null)
+            public Param(string name, ParamType type, object? value = null)
             {
                 Name = name;
                 Type = type;
@@ -265,19 +265,19 @@ namespace SoulsFormats
                         bw.WriteInt32(valueCount);
 
                         if (Type == ParamType.Int)
-                            bw.WriteInt32((int)Value);
+                            bw.WriteInt32((int)Value!);
                         else if (Type == ParamType.Int2)
-                            bw.WriteInt32s((int[])Value);
+                            bw.WriteInt32s((int[])Value!);
                         else if (Type == ParamType.Bool)
-                            bw.WriteBoolean((bool)Value);
+                            bw.WriteBoolean((bool)Value!);
                         else if (Type == ParamType.Float)
-                            bw.WriteSingle((float)Value);
+                            bw.WriteSingle((float)Value!);
                         else if (Type == ParamType.Float2)
-                            bw.WriteSingles((float[])Value);
+                            bw.WriteSingles((float[])Value!);
                         else if (Type == ParamType.Float3)
-                            bw.WriteSingles((float[])Value);
+                            bw.WriteSingles((float[])Value!);
                         else if (Type == ParamType.Float4)
-                            bw.WriteSingles((float[])Value);
+                            bw.WriteSingles((float[])Value!);
                     }
                     valueBlock.Finish(bw);
                     WriteMarker(bw, 0x04);
@@ -292,9 +292,9 @@ namespace SoulsFormats
             public override string ToString()
             {
                 if (Type == ParamType.Float2 || Type == ParamType.Float3 || Type == ParamType.Float4)
-                    return $"{Name} = {{{string.Join(", ", (float[])Value)}}}";
+                    return $"{Name} = {{{string.Join(", ", (float[])Value!)}}}";
                 else if (Type == ParamType.Int2)
-                    return $"{Name} = {{{string.Join(", ", (int[])Value)}}}";
+                    return $"{Name} = {{{string.Join(", ", (int[])Value!)}}}";
                 else
                     return $"{Name} = {Value}";
             }

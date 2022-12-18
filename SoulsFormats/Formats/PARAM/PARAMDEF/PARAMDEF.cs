@@ -128,7 +128,7 @@ namespace SoulsFormats
         /// <summary>
         /// Verifies that the file can be written safely.
         /// </summary>
-        public override bool Validate(out Exception ex)
+        public override bool Validate(out Exception? ex)
         {
             if (!(FormatVersion == 101 || FormatVersion == 102 || FormatVersion == 103 || FormatVersion == 104 || FormatVersion == 106
                 || FormatVersion == 201 || FormatVersion == 202 || FormatVersion == 203))
@@ -310,7 +310,7 @@ namespace SoulsFormats
         /// </summary>
         public void XmlSerialize(string path, int xmlVersion)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             var xws = new XmlWriterSettings { Indent = true };
             using (var xw = XmlWriter.Create(path, xws))
                 XmlSerializer.Serialize(this, xw, xmlVersion);

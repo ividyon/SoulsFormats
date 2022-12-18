@@ -126,12 +126,12 @@ namespace SoulsFormats
             /// <summary>
             /// Function name of the logic interrupt, or null if not present.
             /// </summary>
-            public string LogicInterruptName { get; set; }
+            public string? LogicInterruptName { get; set; }
 
             /// <summary>
             /// Creates a new Goal with the specified values.
             /// </summary>
-            public Goal(int id, string name, bool battleInterrupt, bool logicInterrupt, string logicInterruptName = null)
+            public Goal(int id, string name, bool battleInterrupt, bool logicInterrupt, string logicInterruptName = "")
             {
                 ID = id;
                 Name = name;

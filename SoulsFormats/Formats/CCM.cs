@@ -52,7 +52,7 @@ namespace SoulsFormats
         /// <summary>
         /// Individual characters in this font, keyed by their code.
         /// </summary>
-        public Dictionary<int, Glyph> Glyphs { get; set; }
+        public Dictionary<int, Glyph> Glyphs { get; set; } = new Dictionary<int, Glyph>();
 
         /// <summary>
         /// Deserializes file data from a stream.
@@ -93,7 +93,7 @@ namespace SoulsFormats
             TexCount = br.ReadByte();
             br.AssertByte(0);
 
-            Glyphs = new Dictionary<int, Glyph>(glyphCount);
+            Glyphs.EnsureCapacity(glyphCount);
             if (Version == CCMVer.DemonsSouls || Version == CCMVer.DarkSouls1)
             {
                 var codeGroups = new List<CodeGroup>(codeGroupCount);
@@ -378,9 +378,9 @@ namespace SoulsFormats
                 bw.WriteInt16(Y2);
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
-                return obj is TexRegion && Equals((TexRegion)obj);
+                return obj is TexRegion region && Equals(region);
             }
 
             public bool Equals(TexRegion other)

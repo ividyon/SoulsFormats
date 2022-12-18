@@ -11,7 +11,7 @@ namespace SoulsFormats
         /// <summary>
         /// A timestamp or version number, 8 characters maximum.
         /// </summary>
-        public string Version { get; set; }
+        public string Version { get; set; } = "";
 
         /// <summary>
         /// Indicates the format of the binder.
@@ -31,13 +31,14 @@ namespace SoulsFormats
         /// <summary>
         /// Metadata for files present in the binder.
         /// </summary>
-        public List<BinderFileHeader> Files { get; set; }
+        public List<BinderFileHeader> Files { get; set; } = new List<BinderFileHeader>();
 
         /// <summary>
         /// Reader to read file data from.
         /// </summary>
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         protected BinaryReaderEx DataBR;
-
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         /// <summary>
         /// Reads file data according to the header at the given index in Files.
         /// </summary>

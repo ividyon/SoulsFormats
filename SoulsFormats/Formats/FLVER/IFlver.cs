@@ -57,7 +57,7 @@ namespace SoulsFormats
         /// <summary>
         /// Indicates the type of texture map this is.
         /// </summary>
-        string Type { get; }
+        string? Type { get; }
 
         /// <summary>
         /// Network path to the texture file; only the filename without extension is actually used.

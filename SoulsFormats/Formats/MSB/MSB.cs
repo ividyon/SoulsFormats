@@ -60,17 +60,19 @@ namespace SoulsFormats
             return Regex.Replace(name, @" \{\d+\}", "");
         }
 
-        internal static string FindName<T>(List<T> list, int index) where T : IMsbEntry
+        internal static string? FindName<T>(List<T> list, int index) where T : IMsbEntry
         {
             if (index == -1)
                 return null;
+            else if (index >= list.Count || index < 0)
+                return "OUT OF BOUNDS";
             else
                 return list[index].Name;
         }
 
-        internal static string[] FindNames<T>(List<T> list, int[] indices) where T : IMsbEntry
+        internal static string?[] FindNames<T>(List<T> list, int[] indices) where T : IMsbEntry
         {
-            var names = new string[indices.Length];
+            var names = new string?[indices.Length];
             for (int i = 0; i < indices.Length; i++)
                 names[i] = FindName(list, indices[i]);
             return names;

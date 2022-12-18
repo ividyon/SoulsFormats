@@ -76,7 +76,7 @@ namespace SoulsFormats
             using (var ms = new MemoryStream(bytes))
             {
                 var br = new BinaryReaderEx(bigEndian, ms);
-                string magic = null;
+                string? magic = null;
                 if (br.Length >= 4)
                     magic = br.ReadASCII(4);
 
@@ -485,7 +485,7 @@ namespace SoulsFormats
         {
             byte[] bytes = bnd.Write();
             bytes = EncryptByteArray(ds3RegulationKey, bytes);
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             File.WriteAllBytes(path, bytes);
         }
 
@@ -508,15 +508,14 @@ namespace SoulsFormats
         {
             byte[] bytes = bnd.Write();
             bytes = EncryptByteArray(erRegulationKey, bytes);
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             File.WriteAllBytes(path, bytes);
         }
 
         private static byte[] EncryptByteArray(byte[] key, byte[] secret)
         {
             using (MemoryStream ms = new MemoryStream())
-            using (AesManaged cryptor = new AesManaged())
-            {
+            using (Aes cryptor = Aes.Create()) {
                 cryptor.Mode = CipherMode.CBC;
                 cryptor.Padding = PaddingMode.PKCS7;
                 cryptor.KeySize = 256;
@@ -524,8 +523,7 @@ namespace SoulsFormats
 
                 byte[] iv = new byte[16];
 
-                using (CryptoStream cs = new CryptoStream(ms, cryptor.CreateEncryptor(key, iv), CryptoStreamMode.Write))
-                {
+                using (CryptoStream cs = new CryptoStream(ms, cryptor.CreateEncryptor(key, iv), CryptoStreamMode.Write)) {
                     cs.Write(secret, 0, secret.Length);
                 }
                 byte[] encryptedContent = ms.ToArray();
@@ -548,7 +546,7 @@ namespace SoulsFormats
             Buffer.BlockCopy(secret, iv.Length, encryptedContent, 0, encryptedContent.Length);
 
             using (MemoryStream ms = new MemoryStream())
-            using (AesManaged cryptor = new AesManaged())
+            using (Aes cryptor = Aes.Create())
             {
                 cryptor.Mode = CipherMode.CBC;
                 cryptor.Padding = PaddingMode.None;

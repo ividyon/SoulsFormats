@@ -35,17 +35,17 @@ namespace SoulsFormats
         /// <summary>
         /// Creates a new file with 0 bytes and no ID or name.
         /// </summary>
-        public BinderFile() : this(FileFlags.Flag1, -1, null, new byte[0]) { }
+        public BinderFile() : this(FileFlags.Flag1, -1, "", System.Array.Empty<byte>()) { }
 
         /// <summary>
         /// Creates a new file with no ID or name.
         /// </summary>
-        public BinderFile(FileFlags flags, byte[] bytes) : this(flags, -1, null, bytes) { }
+        public BinderFile(FileFlags flags, byte[] bytes) : this(flags, -1, "", bytes) { }
 
         /// <summary>
         /// Creates a new file with no name.
         /// </summary>
-        public BinderFile(FileFlags flags, int id, byte[] bytes) : this(flags, id, null, bytes) { }
+        public BinderFile(FileFlags flags, int id, byte[] bytes) : this(flags, id, "", bytes) { }
 
         /// <summary>
         /// Creates a new file with no ID.

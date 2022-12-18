@@ -270,6 +270,7 @@ namespace SoulsFormats
         /// </summary>
         public byte[] ReadBytes(int count)
         {
+            if (count == 0) return Array.Empty<byte>();
             byte[] result = br.ReadBytes(count);
             if (result.Length != count)
                 throw new EndOfStreamException("Remaining size of stream was smaller than requested number of bytes.");
@@ -668,6 +669,21 @@ namespace SoulsFormats
         }
         #endregion
 
+        #region Half
+
+        /// <summary>
+        /// Reads a two-byte floating point number.
+        /// </summary>
+        public Half ReadHalf()
+        {
+            if (BigEndian)
+                return BitConverter.ToHalf(ReadReversedBytes(2));
+            else
+                return BitConverter.ToHalf(ReadBytes(2));
+        }
+
+        #endregion Half
+
         #region Single
         /// <summary>
         /// Reads a four-byte floating point number.
@@ -766,6 +782,7 @@ namespace SoulsFormats
 
         #region Enum
         private TEnum ReadEnum<TEnum, TValue>(Func<TValue> readValue, string valueFormat)
+            where TValue : notnull
         {
             TValue value = readValue();
             if (!Enum.IsDefined(typeof(TEnum), value))
@@ -981,7 +998,7 @@ namespace SoulsFormats
         /// </summary>
         public string ReadUTF16()
         {
-            List<byte> bytes = new List<byte>();
+            List<byte> bytes = new();
             byte[] pair = ReadBytes(2);
             while (pair[0] != 0 || pair[1] != 0)
             {
@@ -1138,6 +1155,87 @@ namespace SoulsFormats
             byte r = br.ReadByte();
             byte a = br.ReadByte();
             return Color.FromArgb(a, r, g, b);
+        }
+
+        /// <summary>
+        /// Reads a variable-length int representation used in Havok files
+        /// </summary>
+        /// <returns></returns>
+        public ulong ReadHavokVarint()
+        {
+            //taken from decompiled Elden Ring code,
+            //found by searching for "TBDY" and poking around
+            //0x14169d1f0 in the used version
+            BigEndian = false;
+            byte tag = GetByte(this.Position);
+            if (127 >= tag) return ReadByte();
+            var a = GetUInt64(this.Position);
+            var b = (a & 0xff0000000000) >> 0x18;
+            var c = (a & 0xff00000000) >> 8;
+            var d = (a & 0xff000000) << 8;
+            var e = (a & 0xff0000) << 0x18;
+            var f = (a & 0xff00) << 0x28;
+            var g = (a >> 0x38) | ((a & 0xff000000000000) >> 0x28) | b | c | d | e | f;
+            var h = g | a << 0x38;
+            var k = h >> 0x20;
+            switch (tag >> 3) {
+                case 0x18:
+                case 0x19:
+                case 0x1a:
+                case 0x1b:
+                    Position += 3;
+                    return k >> 8 & 0x1fffff;
+                case 0x1c:
+                    Position += 4;
+                    return k & 0x7ffffff;
+                case 0x1d:
+                    Position += 5;
+                    return h >> 0x18 & 0x7ffffffff;
+                case 0x1e:
+                    Position += 8;
+                    return g | a << 0x38 & 0x7ffffffffffffff;
+                case 0x1f:
+                    break;
+                default:
+                    Position += 2;
+                    return k >> 0x10 & 0x3fff;
+            }
+            if ((tag & 7) == 0) {
+                Position += 6;
+                return (b | c | d | e | f) >> 0x10;
+            }
+            if ((tag & 7) != 1) {
+                return 0;
+            }
+            Position += 1;
+            a = ReadUInt64();
+            return a >> 0x38 | (a & 0xff000000000000) >> 0x28 | (a & 0xff0000000000) >> 0x18 |
+                 (a & 0xff00000000) >> 8 | (a & 0xff000000) << 8 | (a & 0xff0000) << 0x18 |
+                 (a & 0xff00) << 0x28 | a << 0x38;
+        }
+
+        /// <summary>
+        /// Reads a Havok packed/variable-length integer
+        /// </summary>
+        /// <returns></returns>
+        public int ReadHavokVarintOld()
+        {
+            var tag = GetByte(this.Position);
+            if (tag == 0xE8) {
+                ReadByte();
+                return ReadInt32();
+            }
+            if ((tag & 0x80) != 0) {
+                if ((tag & 0x40) != 0) {
+                    if ((tag & 0x20) != 0) {
+                        return (int)(ReadUInt32() & 0x7fffffffff);
+                    }
+                    //return (((int)ReadByte() << 16) | (int)ReadInt16()) & 0x1fffff;
+                    return ReadByte() & 0x0f;
+                }
+                return (int)ReadInt16() & 0x3fff;
+            }
+            return ReadByte();
         }
         #endregion
     }

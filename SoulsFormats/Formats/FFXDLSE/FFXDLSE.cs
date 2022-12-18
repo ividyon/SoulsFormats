@@ -98,14 +98,14 @@ namespace SoulsFormats
         private static XmlSerializer StateSerializer => _stateSerializer ?? MakeSerializers(1);
         private static XmlSerializer ParamSerializer => _paramSerializer ?? MakeSerializers(2);
 
-        public static FFXDLSE XmlDeserialize(Stream stream)
-            => (FFXDLSE)FFXSerializer.Deserialize(stream);
+        public static FFXDLSE? XmlDeserialize(Stream stream)
+            => (FFXDLSE?)FFXSerializer.Deserialize(stream);
 
-        public static FFXDLSE XmlDeserialize(TextReader textReader)
-            => (FFXDLSE)FFXSerializer.Deserialize(textReader);
+        public static FFXDLSE? XmlDeserialize(TextReader textReader)
+            => (FFXDLSE?)FFXSerializer.Deserialize(textReader);
 
-        public static FFXDLSE XmlDeserialize(XmlReader xmlReader)
-            => (FFXDLSE)FFXSerializer.Deserialize(xmlReader);
+        public static FFXDLSE? XmlDeserialize(XmlReader xmlReader)
+            => (FFXDLSE?)FFXSerializer.Deserialize(xmlReader);
 
         public void XmlSerialize(Stream stream)
             => FFXSerializer.Serialize(stream, this);

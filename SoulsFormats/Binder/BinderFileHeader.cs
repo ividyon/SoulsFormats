@@ -95,7 +95,7 @@ namespace SoulsFormats
             if (HasIDs(format))
                 id = br.ReadInt32();
 
-            string name = null;
+            string name = "";
             if (HasNames(format))
             {
                 int nameOffset = br.ReadInt32();
@@ -133,7 +133,7 @@ namespace SoulsFormats
             if (HasIDs(format))
                 id = br.ReadInt32();
 
-            string name = null;
+            string name = "";
             if (HasNames(format))
             {
                 uint nameOffset = br.ReadUInt32();

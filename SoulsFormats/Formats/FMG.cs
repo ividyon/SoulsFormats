@@ -100,7 +100,7 @@ namespace SoulsFormats
                             stringOffset = br.ReadInt32();
 
                         int id = firstID + j;
-                        string text = stringOffset != 0 ? br.GetUTF16(stringOffset) : null;
+                        string? text = stringOffset != 0 ? br.GetUTF16(stringOffset) : null;
                         Entries.Add(new Entry(id, text));
                     }
                 }
@@ -174,7 +174,7 @@ namespace SoulsFormats
 
             for (int i = 0; i < Entries.Count; i++)
             {
-                string text = Entries[i].Text;
+                string? text = Entries[i].Text;
 
                 if (wide)
                     bw.FillInt64($"StringOffset{i}", text == null ? 0 : bw.Position);
@@ -182,7 +182,7 @@ namespace SoulsFormats
                     bw.FillInt32($"StringOffset{i}", text == null ? 0 : (int)bw.Position);
 
                 if (text != null)
-                    bw.WriteUTF16(Entries[i].Text, true);
+                    bw.WriteUTF16(text, true);
             }
 
             bw.FillInt32("FileSize", (int)bw.Position);
@@ -191,14 +191,14 @@ namespace SoulsFormats
         /// <summary>
         /// Returns the string with the given ID, or null if not present.
         /// </summary>
-        public string this[int id]
+        public string? this[int id]
         {
             get => Entries.Find(entry => entry.ID == id)?.Text;
 
             set
             {
                 if (Entries.Any(entry => entry.ID == id))
-                    Entries.Find(entry => entry.ID == id).Text = value;
+                    Entries.Find(entry => entry.ID == id)!.Text = value;
                 else
                     Entries.Add(new Entry(id, value));
             }
@@ -217,12 +217,12 @@ namespace SoulsFormats
             /// <summary>
             /// The text of this entry.
             /// </summary>
-            public string Text;
+            public string? Text;
 
             /// <summary>
             /// Creates a new entry with the specified ID and text.
             /// </summary>
-            public Entry(int id, string text)
+            public Entry(int id, string? text)
             {
                 ID = id;
                 Text = text;

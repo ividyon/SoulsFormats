@@ -391,7 +391,7 @@ namespace SoulsFormats
                 /// <summary>
                 /// If TextType is Literal, the text to display, otherwise null.
                 /// </summary>
-                public string TextLiteral { get; set; }
+                public string? TextLiteral { get; set; }
 
                 /// <summary>
                 /// If TextType is FMG, the FMG ID to display, otherwise -1.
@@ -465,7 +465,7 @@ namespace SoulsFormats
 
                     if (TextType == TxtType.Literal)
                     {
-                        bw.WriteInt32(stringOffsets[TextLiteral]);
+                        bw.WriteInt32(stringOffsets[TextLiteral!]);
                     }
                     else if (TextType == TxtType.FMG)
                     {

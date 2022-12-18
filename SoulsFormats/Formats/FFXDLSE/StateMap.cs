@@ -46,7 +46,7 @@ namespace SoulsFormats
             }
 
             #region IXmlSerializable
-            XmlSchema IXmlSerializable.GetSchema() => null;
+            XmlSchema? IXmlSerializable.GetSchema() => null;
 
             void IXmlSerializable.ReadXml(XmlReader reader)
             {
@@ -57,7 +57,7 @@ namespace SoulsFormats
                 if (!empty)
                 {
                     while (reader.IsStartElement(nameof(State)))
-                        States.Add((State)StateSerializer.Deserialize(reader));
+                        States.Add((State)StateSerializer.Deserialize(reader)!);
                     reader.ReadEndElement();
                 }
             }

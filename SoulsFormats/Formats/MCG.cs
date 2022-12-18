@@ -79,7 +79,7 @@ namespace SoulsFormats
         /// <summary>
         /// Verifies that there are no null references or invalid indices.
         /// </summary>
-        public override bool Validate(out Exception ex)
+        public override bool Validate(out Exception? ex)
         {
             if (!ValidateNull(Nodes, $"{nameof(Nodes)} may not be null.", out ex)
                 || !ValidateNull(Edges, $"{nameof(Edges)} may not be null.", out ex))

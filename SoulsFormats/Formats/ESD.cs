@@ -22,7 +22,7 @@ namespace SoulsFormats
         /// <summary>
         /// Name and/or brief description of the file, or null if not present.
         /// </summary>
-        public string Name;
+        public string? Name;
 
         /// <summary>
         /// Unknown; not bytecode, not floats, not text. Perhaps a hash of something, but if so it isn't checked.
@@ -424,7 +424,6 @@ namespace SoulsFormats
                 states.Remove(offset);
                 stateIDs[offset] = state.ID;
             }
-            stateOffsets = null;
 
             return stateGroup;
         }
@@ -455,7 +454,7 @@ namespace SoulsFormats
             public List<CommandCall> WhileCommands;
 
             internal long ID;
-            private long[] conditionOffsets;
+            private long[]? conditionOffsets;
 
             /// <summary>
             /// Creates a new State with no conditions or commands.
@@ -505,6 +504,7 @@ namespace SoulsFormats
 
             internal void GetConditions(Dictionary<long, Condition> conditions)
             {
+                if (conditionOffsets == null) throw new Exception("Cannot get conditions when conditionOffsets is null");
                 Conditions = new List<Condition>(conditionOffsets.Length);
                 foreach (long offset in conditionOffsets)
                     Conditions.Add(conditions[offset]);
@@ -604,7 +604,7 @@ namespace SoulsFormats
             public byte[] Evaluator;
 
             private long stateOffset;
-            private long[] conditionOffsets;
+            private long[]? conditionOffsets;
 
             /// <summary>
             /// Creates a new Condition with no target state, commands, or subconditions, and an empty evaluator.
@@ -655,6 +655,7 @@ namespace SoulsFormats
 
             internal void GetStateAndConditions(Dictionary<long, long> stateOffsets, Dictionary<long, Condition> conditions)
             {
+                if (conditionOffsets == null) throw new Exception("Cannot get conditions when conditionOffsets is null");
                 // Already processed
                 if (stateOffset == -2)
                     return;

@@ -53,7 +53,7 @@ namespace SoulsFormats
             /// </summary>
             public BoundingBoxes BoundingBox { get; set; }
 
-            private int[] faceSetIndices, vertexBufferIndices;
+            private int[]? faceSetIndices, vertexBufferIndices;
 
             /// <summary>
             /// Creates a new Mesh with default values.
@@ -83,7 +83,7 @@ namespace SoulsFormats
                 int boneOffset = br.ReadInt32();
                 int faceSetCount = br.ReadInt32();
                 int faceSetOffset = br.ReadInt32();
-                int vertexBufferCount = br.AssertInt32(1, 2, 3);
+                int vertexBufferCount = br.AssertInt32(0, 1, 2, 3);
                 int vertexBufferOffset = br.ReadInt32();
 
                 if (boundingBoxOffset != 0)
@@ -102,7 +102,8 @@ namespace SoulsFormats
 
             internal void TakeFaceSets(Dictionary<int, FaceSet> faceSetDict)
             {
-                FaceSets = new List<FaceSet>(faceSetIndices.Length);
+                if (faceSetIndices == null) throw new Exception("Cannot take face sets if FaceSets is null");
+                FaceSets = new List<FaceSet>(faceSetIndices!.Length);
                 foreach (int i in faceSetIndices)
                 {
                     if (!faceSetDict.ContainsKey(i))
@@ -116,7 +117,8 @@ namespace SoulsFormats
 
             internal void TakeVertexBuffers(Dictionary<int, VertexBuffer> vertexBufferDict, List<BufferLayout> layouts)
             {
-                VertexBuffers = new List<VertexBuffer>(vertexBufferIndices.Length);
+                if (vertexBufferIndices == null) throw new Exception("Cannot take vertex buffers if VertexBuffers is null");
+                VertexBuffers = new List<VertexBuffer>(vertexBufferIndices!.Length);
                 foreach (int i in vertexBufferIndices)
                 {
                     if (!vertexBufferDict.ContainsKey(i))
@@ -157,6 +159,7 @@ namespace SoulsFormats
 
             internal void ReadVertices(BinaryReaderEx br, int dataOffset, List<BufferLayout> layouts, FLVERHeader header)
             {
+                if (VertexBuffers.Count == 0) return;
                 var layoutMembers = layouts.SelectMany(l => l);
                 int uvCap = layoutMembers.Where(m => m.Semantic == FLVER.LayoutSemantic.UV).Count();
                 int tanCap = layoutMembers.Where(m => m.Semantic == FLVER.LayoutSemantic.Tangent).Count();
